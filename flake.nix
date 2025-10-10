@@ -1,0 +1,217 @@
+{
+  description = "Corne V4.1 Vial-QMK Firmware Builder";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixos-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    # The vial fork of qmk, stores the keyboard config in on-keyboard memory, and
+    # supports the `Vial` GUI key map config app.
+    vial-qmk = {
+      url = "git+https://github.com/vial-kb/vial-qmk.git?submodules=1&allRefs=1";
+      flake = false;
+    };
+
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = {
+    nixpkgs,
+    nixos-unstable,
+    vial-qmk,
+    flake-utils,
+    ...
+  }:
+  # This effectively appends `.x86_64-linux` to the attributes returned
+  # by the function passed in. The `system` parameter is also that string.
+    flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-linux"] (
+      system: let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            # Add unstable packages
+            (_final: prev: {
+              unstable = nixos-unstable.legacyPackages."${prev.system}";
+            })
+
+            # Use python3.11 for compatibility with QMK
+            (final: _prev: {
+              python3 = final.python311;
+              python3Packages = final.python311.pkgs;
+            })
+          ];
+        };
+      in {
+        # Development shell for building firmware
+        devShells.default = pkgs.mkShell {
+          # Corne V4.1 specific configuration
+          KEYBOARD = "crkbd/rev4_1"; # ✅ Correct for Corne V4.1
+          KEYMAP = "vial";
+
+          # Enhanced build configuration
+          VIAL_QMK_DIR = "${vial-qmk}";
+
+          # Build inputs with additional tools
+          buildInputs = with pkgs; [
+            qmk
+            unstable.vial
+            dfu-util # For flashing via DFU
+            avrdude # For AVR microcontrollers
+            gcc-arm-embedded # For ARM microcontrollers
+            python3 # QMK requirements
+            python3Packages.setuptools
+
+            # QMK Python dependencies
+            python3Packages.milc
+            python3Packages.dotty-dict
+            python3Packages.hid
+            python3Packages.hjson
+            python3Packages.jsonschema
+            python3Packages.pyusb
+            python3Packages.argcomplete
+            python3Packages.platformdirs # MILC dependency
+            python3Packages.appdirs # Legacy MILC dependency
+            python3Packages.pyyaml # YAML parsing for pre-commit hooks
+            git # For QMK setup
+            which # Build dependency
+            gnumake # Build system
+
+            # Additional utilities
+            jq # JSON processing for layout files
+            unstable.keymap-drawer # Layout visualization tool
+
+            # Formatting and validation tools
+            alejandra # Nix formatter (pre-commit)
+            yamlfmt # YAML formatter (pre-commit)
+            act # Local GitHub Actions runner
+            pre-commit # Pre-commit hook runner
+            nodePackages.markdownlint-cli # Markdown linting
+            yamllint # YAML validation
+          ];
+
+          # Alias commands for building and flashing
+          shellHook = ''
+            # Ensure QMK is properly configured
+            export QMK_HOME="${vial-qmk}"
+
+            # Add scripts directory to PATH for easy command access
+            export PATH="$(pwd)/scripts:$PATH"
+
+            # Auto-install pre-commit hooks
+            echo "Installing pre-commit hooks..."
+            pre-commit install --install-hooks >/dev/null 2>&1 || echo "Pre-commit hooks already installed"
+
+            # Simple build aliases (fish-compatible)
+            alias build='make -C ${vial-qmk} BUILD_DIR=$(pwd)/build COPY=echo -j$(nproc) $KEYBOARD:$KEYMAP'
+            alias flash='make -C ${vial-qmk} BUILD_DIR=$(pwd)/build COPY=echo -j$(nproc) $KEYBOARD:$KEYMAP:flash'
+            alias clean='rm -rf build/ && echo "Build directory cleaned"'
+            alias list-keyboards='find ${vial-qmk}/keyboards -name "rev4_1" -type d'
+            alias copy-uf2='cp build/*.uf2 firmware/ 2>/dev/null && echo "UF2 copied to firmware/" || echo "No UF2 files found"'
+
+            # Linting and formatting aliases (simple)
+            alias lint-all='pre-commit run --all-files'
+            alias lint-nix='alejandra . && echo "Nix files formatted"'
+            alias lint-yaml='yamllint .github/ && echo "YAML files valid"'
+            alias lint-md='markdownlint *.md && echo "Markdown files valid"'
+
+            # Pre-commit management aliases
+            alias update-hooks='pre-commit autoupdate && echo "Pre-commit hooks updated"'
+            alias run-hooks='pre-commit run --all-files'
+
+            # Environment setup
+            echo "Corne V4.1 Vial-QMK Build Environment Ready"
+            echo "==========================================="
+            echo ""
+            echo "Configuration:"
+            echo "  Keyboard: \$KEYBOARD"
+            echo "  Keymap:   \$KEYMAP"
+            echo "  QMK Dir:  \$QMK_HOME"
+            echo ""
+            echo "Available commands:"
+            echo ""
+            echo "Build Commands:"
+            echo "  build            - Build firmware (.uf2 file)"
+            echo "  flash            - Build and flash firmware"
+            echo "  clean            - Clean build directory"
+            echo "  copy-uf2         - Copy built UF2 to firmware/"
+            echo ""
+            echo "Testing Commands (nextest-style):"
+            echo "  test-all.sh      - Run complete test suite"
+            echo "  test-layouts.sh  - Validate VIAL layout files"
+            echo "  test-firmware.sh - Test firmware build (dry-run)"
+            echo "  test-configs.sh  - Validate Nix configurations"
+            echo "  test-qmk.sh      - Validate QMK environment"
+            echo ""
+            echo "GitHub Actions (act-check style):"
+            echo "  act-check.sh     - Run firmware CI locally"
+            echo "  act-check.sh [workflow] - Run specific workflow"
+            echo ""
+            echo "Linting Commands:"
+            echo "  lint-all         - Run all pre-commit hooks"
+            echo "  lint-nix         - Format Nix files"
+            echo "  lint-yaml        - Validate YAML files"
+            echo "  lint-md          - Validate Markdown files"
+            echo ""
+            echo "Pre-commit Management:"
+            echo "  setup-hooks.sh   - Install pre-commit hooks"
+            echo "  update-hooks     - Update pre-commit hooks"
+            echo "  run-hooks        - Run all pre-commit hooks"
+            echo ""
+            echo "Utility Commands:"
+            echo "  list-keyboards   - List available Corne keyboards"
+            echo "  keymap-drawer    - Generate layout images from YAML files"
+            echo "  validate-vial.sh - Advanced VIAL file validation"
+            echo ""
+            echo "Build process:"
+            echo "  1. Run 'build' to compile firmware"
+            echo "  2. Put keyboard in bootloader mode"
+            echo "  3. Copy .uf2 file to mounted drive"
+            echo ""
+
+            # Verify keyboard exists
+            if [ -d "${vial-qmk}/keyboards/crkbd/rev4_1" ]; then
+              echo "✅ Corne V4.1 keyboard configuration found"
+            else
+              echo "❌ Corne V4.1 keyboard configuration NOT found"
+              echo "Available Corne revisions:"
+              find ${vial-qmk}/keyboards/crkbd -name "rev*" -type d 2>/dev/null || echo "  No Corne keyboards found"
+            fi
+            echo ""
+          '';
+
+          # Additional environment variables
+          NIX_SHELL_PRESERVE_PROMPT = "1";
+        };
+
+        # Package for the firmware (optional)
+        packages.firmware = pkgs.stdenv.mkDerivation {
+          name = "corne-v4-1-vial-firmware";
+          version = "1.0.0";
+
+          src = vial-qmk;
+
+          buildInputs = with pkgs; [
+            qmk
+            gcc-arm-embedded
+            python3
+            python3Packages.setuptools
+            gnumake
+          ];
+
+          buildPhase = ''
+            export QMK_HOME=$src
+            make BUILD_DIR=$out/build -j$(nproc) crkbd/rev4_1:vial
+          '';
+
+          installPhase = ''
+            mkdir -p $out/firmware
+            cp build/*.uf2 $out/firmware/ 2>/dev/null || echo "No UF2 files generated"
+            cp build/*.hex $out/firmware/ 2>/dev/null || echo "No HEX files generated"
+          '';
+        };
+
+        # Formatter for the flake
+        formatter = pkgs.alejandra;
+      }
+    );
+}

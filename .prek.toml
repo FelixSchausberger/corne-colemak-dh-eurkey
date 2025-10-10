@@ -1,0 +1,113 @@
+# Prek configuration for Corne V4.1 Keyboard Project
+exclude = [
+  "firmware/*.uf2",
+  "images/",
+]
+
+# VIAL layout validation
+[hooks.validate-vial-layouts]
+entry = "bash"
+args = [
+  "-c",
+  '''
+  for VIL_FILE in "$@"; do
+    echo "Validating VIAL layout: $VIL_FILE"
+
+    # Check 1: Valid JSON structure
+    if ! jq empty "$VIL_FILE" 2>/dev/null; then
+      echo "❌ VALIDATION FAILED: Invalid JSON structure in $VIL_FILE"
+      jq empty "$VIL_FILE"
+      exit 1
+    fi
+
+    # Check 2: Required fields presence
+    REQUIRED_FIELDS=("version" "uid" "layout" "vial_protocol" "via_protocol")
+    for field in "${REQUIRED_FIELDS[@]}"; do
+      if ! jq -e "has(\"$field\")" "$VIL_FILE" > /dev/null; then
+        echo "❌ VALIDATION FAILED: Missing required field '$field' in $VIL_FILE"
+        exit 1
+      fi
+    done
+
+    # Check 3: Layout structure validation
+    if ! jq -e '.layout | type == "array"' "$VIL_FILE" > /dev/null; then
+      echo "❌ VALIDATION FAILED: 'layout' must be an array in $VIL_FILE"
+      exit 1
+    fi
+
+    echo "✅ VALIDATION PASSED: $VIL_FILE"
+  done
+  ''',
+  "--",
+]
+files = "\\.vil$"
+pass_filenames = true
+
+# Nix configuration validation
+[hooks.nix-flake-check]
+entry = "nix flake check --no-build"
+files = "\\.nix$|flake\\.lock$"
+pass_filenames = false
+
+# Alejandra Nix formatter
+[hooks.alejandra]
+entry = "alejandra"
+files = "\\.nix$"
+
+# YAML validation
+[hooks.yamllint]
+entry = "yamllint -d relaxed"
+files = "\\.(yml|yaml)$"
+
+# Markdown validation
+[hooks.markdownlint]
+entry = "markdownlint --fix"
+files = "\\.md$"
+
+# General file checks
+[hooks.trailing-whitespace]
+entry = "trailing-whitespace-fixer"
+files = "\\.(nix|md|yml|yaml|sh)$"
+
+[hooks.end-of-file-fixer]
+entry = "end-of-file-fixer"
+files = "\\.(nix|md|yml|yaml|sh)$"
+
+# Conventional commits validation
+[hooks.conventional-commits]
+entry = "bash"
+args = [
+  "-c",
+  '''
+  COMMIT_MSG_FILE="$1"
+  COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+  # Skip merge commits and revert commits
+  if echo "$COMMIT_MSG" | grep -q "^Merge\|^Revert"; then
+    exit 0
+  fi
+
+  # Valid conventional commit pattern
+  PATTERN="^(feat|fix|docs|style|refactor|perf|test|chore)(\([a-z0-9-]+\))?: .+"
+
+  if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
+    echo "❌ COMMIT MESSAGE VALIDATION FAILED"
+    echo ""
+    echo "Invalid commit message format. Expected:"
+    echo "  type(scope?): description"
+    echo ""
+    echo "Valid types: feat, fix, docs, style, refactor, perf, test, chore"
+    echo ""
+    echo "Examples:"
+    echo "  feat: add auto-merge workflow"
+    echo "  fix: resolve jj bookmark creation issue"
+    echo "  docs: update jujutsu workflow guide"
+    echo "  feat(ci): optimize cachix push filter"
+    echo ""
+    exit 1
+  fi
+  ''',
+  "--",
+]
+stages = ["commit-msg"]
+pass_filenames = true
