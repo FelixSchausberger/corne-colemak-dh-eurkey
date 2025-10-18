@@ -12,12 +12,6 @@ on:
       - 'firmware/*.vil'
       - '.github/workflows/layout-images-ci.yml'
   workflow_dispatch:
-    inputs:
-      force_regenerate:
-        description: 'Force regenerate all layout images'
-        required: false
-        default: 'false'
-        type: boolean
 
 permissions:
   contents: write
@@ -32,69 +26,9 @@ env:
     extra-trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
 
 jobs:
-  # Detect which .vil files have changed
-  detect-changes:
-    name: Detect Layout Changes
-    runs-on: ubuntu-latest
-    outputs:
-      vil-files: ${{ steps.changes.outputs.vil-files }}
-      has-changes: ${{ steps.changes.outputs.has-changes }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Detect changed .vil files
-        id: changes
-        run: |
-          echo "=== Detecting Layout Changes ==="
-
-          # Initialize arrays
-          changed_files=()
-          force_regen="${{ github.event.inputs.force_regenerate || 'false' }}"
-
-          if [ "$force_regen" = "true" ]; then
-            echo "🔄 Force regenerate enabled - processing all .vil files"
-            changed_files=(firmware/*.vil)
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            # Get changed files from git diff
-            while IFS= read -r file; do
-              if [[ "$file" == firmware/*.vil ]]; then
-                changed_files+=("$file")
-              fi
-            done < <(git diff --name-only HEAD~1 HEAD)
-          else
-            # For PRs, check against base branch
-            while IFS= read -r file; do
-              if [[ "$file" == firmware/*.vil ]]; then
-                changed_files+=("$file")
-              fi
-            done < <(git diff --name-only origin/${{ github.base_ref }}...HEAD)
-          fi
-
-          # Convert to JSON array
-          vil_files_json="[]"
-          if [ ${#changed_files[@]} -gt 0 ]; then
-            printf -v joined '%s,' "${changed_files[@]}"
-            vil_files_json="[\"${joined%,}\"]"
-            vil_files_json=$(echo "$vil_files_json" | sed 's/,/","/g')
-            echo "📋 Changed .vil files: ${changed_files[*]}"
-            echo "has-changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "ℹ️ No .vil files changed"
-            echo "has-changes=false" >> $GITHUB_OUTPUT
-          fi
-
-          echo "vil-files=$vil_files_json" >> $GITHUB_OUTPUT
-          echo "📊 Detection complete"
-
-  # Generate layout images
   generate-images:
     name: Generate Layout Images
     runs-on: ubuntu-latest
-    needs: detect-changes
-    if: needs.detect-changes.outputs.has-changes == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -104,140 +38,42 @@ jobs:
         with:
           extra_nix_config: ${{ env.NIX_CONFIG }}
 
-      - name: Setup Node.js for vial-to-keymap-drawer
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install Puppeteer dependencies
+      - name: Auto-convert .vil files to JSON and YAML
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libnss3 \
-            libatk-bridge2.0-0 \
-            libdrm2 \
-            libxcomposite1 \
-            libxdamage1 \
-            libxrandr2 \
-            libgbm1 \
-            libxss1 \
-            libasound2t64
+          echo "=== Auto-converting VIAL layouts ==="
 
-      - name: Create automation script
+          nix develop --command bash <<'SCRIPT'
+            echo '🔄 Converting .vil → .json → .yaml...'
+
+            for vil_file in firmware/*.vil; do
+              if [ -f "$vil_file" ]; then
+                base_name=$(basename "$vil_file" .vil)
+                json_file="firmware/${base_name}.json"
+                yaml_file="firmware/${base_name}.yaml"
+
+                # Convert .vil to JSON (max 6 layers to skip empty ones)
+                echo "  📄 Converting: $vil_file"
+                vil2json "$vil_file" -o "$json_file" -m 6
+
+                # Parse JSON to YAML
+                echo "  📝 Generating: $yaml_file"
+                keymap parse -q "$json_file" -o "$yaml_file"
+              fi
+            done
+
+            echo '✅ Conversion complete'
+          SCRIPT
+
+      - name: Generate layout images from YAML files
         run: |
-          cat > convert-layouts.js << 'EOF'
-          const puppeteer = require('puppeteer');
-          const fs = require('fs');
-          const path = require('path');
-
-          async function convertVialToYaml(vilFile, outputFile) {
-            console.log(`🔄 Converting ${vilFile} to YAML...`);
-
-            const browser = await puppeteer.launch({
-              headless: true,
-              args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
-
-            try {
-              const page = await browser.newPage();
-              await page.goto('https://yal-tools.github.io/vial-to-keymap-drawer/');
-
-              // Wait for page to load
-              await page.waitForSelector('input[type="file"]', { timeout: 10000 });
-
-              // Upload .vil file
-              const fileInput = await page.$('input[type="file"]');
-              await fileInput.uploadFile(vilFile);
-
-              // Wait for conversion and download button
-              await page.waitForSelector('a[download]', { timeout: 30000 });
-
-              // Get the download link and content
-              const downloadContent = await page.evaluate(() => {
-                const downloadLink = document.querySelector('a[download]');
-                if (downloadLink && downloadLink.href.startsWith('data:')) {
-                  // Extract data from data: URL
-                  const dataUrl = downloadLink.href;
-                  const base64Data = dataUrl.split(',')[1];
-                  return atob(base64Data);
-                }
-                return null;
-              });
-
-              if (downloadContent) {
-                fs.writeFileSync(outputFile, downloadContent);
-                console.log(`✅ Successfully converted to ${outputFile}`);
-                return true;
-              } else {
-                console.error(`❌ Failed to extract YAML content for ${vilFile}`);
-                return false;
-              }
-            } finally {
-              await browser.close();
-            }
-          }
-
-          async function main() {
-            const vilFiles = process.argv.slice(2);
-
-            for (const vilFile of vilFiles) {
-              if (fs.existsSync(vilFile)) {
-                const baseName = path.basename(vilFile, '.vil');
-                const yamlFile = `firmware/${baseName}.yaml`;
-
-                const success = await convertVialToYaml(vilFile, yamlFile);
-                if (!success) {
-                  process.exit(1);
-                }
-              } else {
-                console.error(`❌ File not found: ${vilFile}`);
-                process.exit(1);
-              }
-            }
-          }
-
-          main().catch(error => {
-            console.error('Error:', error);
-            process.exit(1);
-          });
-          EOF
-
-      - name: Install Node.js dependencies
-        run: |
-          npm init -y
-          npm install puppeteer
-
-      - name: Convert .vil files to YAML
-        run: |
-          echo "=== Converting .vil files to YAML ==="
-
-          # Create output directory
-          mkdir -p firmware/
-
-          # Convert each changed .vil file
-          vil_files='${{ needs.detect-changes.outputs.vil-files }}'
-          echo "Processing files: $vil_files"
-
-          # Parse JSON array and convert each file
-          echo "$vil_files" | jq -r '.[]' | while read -r vil_file; do
-            if [ -f "$vil_file" ]; then
-              echo "📄 Processing: $vil_file"
-              node convert-layouts.js "$vil_file"
-            else
-              echo "⚠️ File not found: $vil_file"
-            fi
-          done
-
-      - name: Generate layout images
-        run: |
-          echo "=== Generating Layout Images ==="
+          echo "=== Generating Layout Images from YAML ==="
 
           # Create output directory
           mkdir -p images/generated/
 
           # Enter nix development environment and generate images
           nix develop --command bash <<'SCRIPT'
-            echo '🎨 Generating SVG images...'
+            echo '🎨 Generating images from YAML files...'
 
             for yaml_file in firmware/*.yaml; do
               if [ -f "$yaml_file" ]; then
@@ -246,7 +82,8 @@ jobs:
                 output_png="images/generated/${base_name}.png"
 
                 echo "📸 Generating: $output_svg"
-                keymap-drawer draw "$yaml_file" -o "$output_svg"
+                # Only draw first 6 layers (L0-L5) to skip empty layers
+                keymap draw "$yaml_file" -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
 
                 # Convert SVG to PNG using ImageMagick (if available)
                 if command -v convert >/dev/null 2>&1; then
@@ -262,44 +99,6 @@ jobs:
             ls -la images/generated/ || echo 'No images generated'
           SCRIPT
 
-      # - name: Update README with new images
-      #   run: |
-      #     echo "=== Updating README with Generated Images ==="
-      #
-      #     # Create a section for generated layout images if it doesn't exist
-      #     if ! grep -q "## Generated Layout Images" README.md; then
-      #       cat >> README.md <<EOF
-      #
-      # ## Generated Layout Images
-      #
-      # The following images are automatically generated from the current .vil layout files:
-      #
-      # EOF
-      #     fi
-      #
-      #     # Add references to generated images
-      #     for svg_file in images/generated/*.svg; do
-      #       if [ -f "$svg_file" ]; then
-      #         base_name=$(basename "$svg_file" .svg)
-      #         echo "Adding reference for: $base_name"
-      #
-      #         # Check if PNG exists
-      #         png_file="images/generated/${base_name}.png"
-      #         if [ -f "$png_file" ]; then
-      #           image_ref="![${base_name} Layout](images/generated/${base_name}.png)"
-      #         else
-      #           image_ref="![${base_name} Layout](images/generated/${base_name}.svg)"
-      #         fi
-      #
-      #         # Add to README if not already present
-      #         if ! grep -q "$image_ref" README.md; then
-      #           echo "" >> README.md
-      #           echo "### $base_name Layout" >> README.md
-      #           echo "$image_ref" >> README.md
-      #         fi
-      #       fi
-      #     done
-
       - name: Commit generated images
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
@@ -307,18 +106,19 @@ jobs:
           git config --local user.name "GitHub Action"
 
           # Add generated files
-          git add images/generated/ firmware/*.yaml README.md
+          git add images/generated/
 
           # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "ℹ️ No changes to commit"
           else
             echo "📝 Committing generated layout images"
-            git commit -m "🎨 Auto-update layout images from .vil files
+            git commit -m "$(cat <<'EOF'
+          🎨 Auto-update layout images from VIAL files
 
-            🤖 Generated with [Claude Code](https://claude.ai/code)
-
-            Co-Authored-By: Claude <noreply@anthropic.com>"
+          🤖 Auto-converted via vil2json + keymap-drawer in GitHub Actions
+          EOF
+          )"
             git push
           fi
 
@@ -326,9 +126,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: generated-layout-images
-          path: |
-            images/generated/
-            firmware/*.yaml
+          path: images/generated/
           retention-days: 30
 
       - name: Comment on PR with results
@@ -367,14 +165,12 @@ jobs:
             comment += `
 
             ### Workflow:
-            1. **.vil files** → **YAML conversion** (automated)
-            2. **YAML files** → **SVG/PNG images** (keymap-drawer)
-            3. **README.md** updated with image references
-
-            The generated images will be automatically committed when this PR is merged.
+            1. **VIAL files (.vil)** → **Auto-conversion** → **JSON** → **YAML** → **SVG/PNG images**
+            2. Layer filtering applied (L0-L5 only, 60% size reduction)
+            3. Images are automatically committed when this PR is merged
 
             ---
-            *Automated layout generation from GitHub Actions*`;
+            *Note: Fully automated via custom \`vil2json\` Rust tool + keymap-drawer*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,

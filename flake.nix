@@ -62,7 +62,7 @@
             python3Packages.setuptools
 
             # QMK Python dependencies
-            python3Packages.milc
+            unstable.python3Packages.milc # Need >= 1.9.0 for via2json
             python3Packages.dotty-dict
             python3Packages.hid
             python3Packages.hjson
@@ -79,6 +79,14 @@
             # Additional utilities
             jq # JSON processing for layout files
             unstable.keymap-drawer # Layout visualization tool
+
+            # Rust tool: VIAL to QMK JSON converter
+            (pkgs.rustPlatform.buildRustPackage {
+              pname = "vil2json";
+              version = "0.1.0";
+              src = ./tools/vil2json;
+              cargoLock.lockFile = ./tools/vil2json/Cargo.lock;
+            })
 
             # Formatting and validation tools
             alejandra # Nix formatter (pre-commit)
@@ -159,7 +167,7 @@
             echo ""
             echo "Utility Commands:"
             echo "  list-keyboards   - List available Corne keyboards"
-            echo "  keymap-drawer    - Generate layout images from YAML files"
+            echo "  keymap           - Generate layout images from YAML files"
             echo "  validate-vial.sh - Advanced VIAL file validation"
             echo ""
             echo "Build process:"

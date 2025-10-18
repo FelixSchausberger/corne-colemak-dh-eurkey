@@ -14,6 +14,14 @@ reproducible development environments.
 - **Development Environment**: [Nix Flakes](https://nixos.wiki/wiki/Flakes) (reproducible builds)
 - **Version Control**: [Jujutsu](https://github.com/martinvonz/jj) (modern VCS with dev-main workflow)
 
+## Current Keyboard Layout
+
+The layout visualization below is **automatically updated** from the main branch. It always shows the latest version of the `corne_v4-1_custom_hrmods.vil` layout (Colemak-DH with home row modifiers):
+
+![Keyboard Layout](https://raw.githubusercontent.com/FelixSchausberger/corne-colemak-dh-eurkey/main/images/generated/corne_v4-1_custom_hrmods.svg)
+
+> **Note**: Images are automatically generated via GitHub Actions when YAML layout files are updated. See the [Layout Visualization](#layout-visualization--image-generation) section for details.
+
 ## Repository Structure
 
 ```text
@@ -56,7 +64,7 @@ nix develop
 build            # Build firmware (.uf2 file)
 flash            # Build and flash firmware
 validate-layout  # Validate VIAL layout JSON
-keymap-drawer    # Generate layout images from YAML files
+keymap           # Generate layout images from YAML files
 wayshot          # Modern Wayland screenshot tool (Rust)
 slurp            # Wayland region selector
 vial             # Open VIAL GUI for layout configuration
@@ -143,45 +151,95 @@ For comprehensive workflow documentation and helper functions (jjbranch, jjdescr
 
 ## Layout Visualization & Image Generation
 
-### Automated Process (Recommended)
+This repository uses an **automated three-step workflow** for generating keyboard layout images:
 
-Layout images are **automatically generated** via GitHub Actions when you push changes to `.vil` files:
+### Workflow Overview
 
-- **Triggers**: Any change to `firmware/*.vil` files or manual workflow dispatch
-- **Process**: Converts `.vil` → `.yaml` → `.svg/.png` using web tools and keymap-drawer
-- **Output**: Creates images in `images/generated/` and updates README automatically
-- **No manual work**: Images stay in sync with your layout changes
+1. **VIAL → JSON** (`.vil` → `.json`): Custom Rust tool converts VIAL layouts to QMK keymap.json
+2. **JSON → YAML** (`.json` → `.yaml`): Parse with keymap-drawer
+3. **YAML → Images** (`.yaml` → `.svg/.png`): Generate visualizations with layer filtering (automated in CI)
 
-### Manual Process (Local Development)
+### Automated Workflow (Recommended)
 
-For local preview or custom image generation:
+The simplest approach is to **let GitHub Actions handle everything automatically**:
 
-#### Step 1: Convert VIAL to YAML
+1. Edit your layout in VIAL and save as `.vil` file
+2. Commit the `.vil` file to `firmware/` directory
+3. Push to GitHub
+4. CI automatically generates `.json`, `.yaml`, and images with only active layers (L0-L5)
 
-1. Visit [vial-to-keymap-drawer web tool](https://yal-tools.github.io/vial-to-keymap-drawer/)
-2. Upload your `.vil` file from `firmware/` directory
-3. Download the generated YAML file
-4. Save it as `firmware/your-layout.yaml`
+**Benefits:**
+- No manual conversion needed
+- Automatic layer filtering (60% smaller SVG files)
+- Reproducible builds via Nix
+- Images always stay in sync with layouts
 
-#### Step 2: Generate Layout Images
+### Manual Workflow (Advanced)
+
+For local preview or custom conversion:
 
 ```bash
-# Enter the nix development environment
 nix develop
 
-# Generate SVG from YAML
-keymap-drawer draw firmware/your-layout.yaml -o images/generated/your-layout.svg
+# Convert .vil to keymap.json using custom Rust tool
+vil2json firmware/your-layout.vil -o firmware/your-layout.json
 
-# Optional: Convert to PNG for better README embedding
+# Optional: Limit to first 6 layers and filter empty ones
+vil2json firmware/your-layout.vil -o firmware/your-layout.json -m 6 -f
+
+# Generate YAML from JSON
+keymap parse -q firmware/your-layout.json -o firmware/your-layout.yaml
+
+# Generate SVG with layer filtering (only L0-L5)
+keymap draw firmware/your-layout.yaml -s L0 L1 L2 L3 L4 L5 \
+  -o images/generated/your-layout.svg
+
+# Optional: Convert to PNG
 convert images/generated/your-layout.svg images/generated/your-layout.png
 ```
 
-#### Step 3: Preview & Iterate
+**vil2json Options:**
+- `-m, --max-layers <N>`: Limit to first N layers (e.g., `-m 6` for L0-L5)
+- `-f, --filter-empty`: Skip completely empty layers (only KC_TRNS/KC_NO)
+- `-k, --keyboard <KB>`: Set QMK keyboard (default: crkbd/rev4_1/standard)
+- `-l, --layout <LAYOUT>`: Set layout macro (default: LAYOUT_split_3x6_3_ex2)
 
-- Open generated images to verify layout appearance
-- Modify `.vil` file in VIAL if needed
-- Repeat process until satisfied
-- Push changes to trigger automated generation for production
+### Why This Approach?
+
+**Custom Rust Tool (vil2json):**
+- VIAL `.vil` files are incompatible with `qmk via2json` (different JSON structure)
+- The vial-to-keymap-drawer web tool includes matrix placeholders causing validation errors
+- Fast, type-safe Rust implementation handles proper key filtering
+- Integrated into Nix flake for reproducible builds
+
+**Layer Filtering:**
+- Corne layouts have 16 layers (L0-L15), but typically only 6 are used
+- Filtering reduces SVG size by ~60% (137KB → 55KB)
+- Improves README load times and readability
+
+### Complete Example
+
+```bash
+nix develop
+
+# 1. Edit layout in VIAL, save as .vil file
+
+# 2. Convert to JSON (6 layers max, filter empty)
+vil2json firmware/corne_v4-1_custom_hrmods.vil -m 6 -f
+
+# 3. Generate YAML
+keymap parse -q firmware/corne_v4-1_custom_hrmods.json \
+  -o firmware/corne_v4-1_custom_hrmods.yaml
+
+# 4. (Optional) Preview locally with layer filtering
+keymap draw firmware/corne_v4-1_custom_hrmods.yaml \
+  -s L0 L1 L2 L3 L4 L5 \
+  -o images/generated/corne_v4-1_custom_hrmods.svg
+
+# 5. Commit and push (.vil files trigger auto-conversion in CI)
+jj describe -m "feat: update keymap layout"
+jj git push
+```
 
 ## Current Layout Features
 
