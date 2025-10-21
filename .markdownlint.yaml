@@ -1,0 +1,24 @@
+# Markdownlint configuration for keyboard documentation
+# Similar to stethoscope project setup
+
+# Default rule configuration
+default: true
+# Line length - allow longer lines for layout descriptions
+MD013:
+  line_length: 120
+  code_blocks: false
+  tables: false
+  headings: false
+# Allow duplicate headings in different sections
+MD024:
+  allow_different_nesting: true
+# Allow inline HTML for keyboard layout descriptions
+MD033: false
+# Allow trailing punctuation in headings for questions
+MD026: false
+# Allow raw URLs for keyboard references
+MD034: false
+# Disable rules that conflict with keyboard documentation style
+MD001: false # Heading levels can skip for layout organization
+MD041: false # First line doesn't need to be h1 (may have metadata)
+MD045: false # Allow images without alt text for layout diagrams

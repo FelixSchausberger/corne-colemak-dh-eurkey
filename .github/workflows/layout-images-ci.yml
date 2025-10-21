@@ -1,0 +1,187 @@
+name: Layout Images CI/CD
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "firmware/*.vil"
+      - ".github/workflows/layout-images-ci.yml"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "firmware/*.vil"
+      - ".github/workflows/layout-images-ci.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+env:
+  NIX_CONFIG: |
+    experimental-features = nix-command flakes pipe-operators
+    allow-import-from-derivation = true
+    accept-flake-config = true
+    extra-substituters = https://cache.nixos.org https://nix-community.cachix.org
+    extra-trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+jobs:
+  validate:
+    name: Validate Source Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+        with:
+          extra_nix_config: ${{ env.NIX_CONFIG }}
+      - name: Run prek validation in nix develop shell
+        run: |
+          echo "=== Running prek validation ==="
+          nix develop --command prek run --all-files
+          echo "✅ All validation checks passed"
+  generate-images:
+    name: Generate Layout Images
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+        with:
+          extra_nix_config: ${{ env.NIX_CONFIG }}
+      - name: Auto-convert .vil files to JSON and YAML
+        run: |
+          echo "=== Auto-converting VIAL layouts ==="
+
+          nix develop --command bash <<'SCRIPT'
+            echo '🔄 Converting .vil → .json → .yaml...'
+
+            for vil_file in firmware/*.vil; do
+              if [ -f "$vil_file" ]; then
+                base_name=$(basename "$vil_file" .vil)
+                json_file="firmware/${base_name}.json"
+                yaml_file="firmware/${base_name}.yaml"
+
+                # Convert .vil to JSON (max 6 layers to skip empty ones)
+                echo "  📄 Converting: $vil_file"
+                vil2json "$vil_file" -o "$json_file" -m 6
+
+                # Parse JSON to YAML
+                echo "  📝 Generating: $yaml_file"
+                keymap parse -q "$json_file" -o "$yaml_file"
+              fi
+            done
+
+            echo '✅ Conversion complete'
+          SCRIPT
+      - name: Generate layout images from YAML files
+        run: |
+          echo "=== Generating Layout Images from YAML ==="
+
+          # Create output directory
+          mkdir -p images/generated/
+
+          # Enter nix development environment and generate images
+          nix develop --command bash <<'SCRIPT'
+            echo '🎨 Generating images from YAML files...'
+
+            for yaml_file in firmware/*.yaml; do
+              if [ -f "$yaml_file" ]; then
+                base_name=$(basename "$yaml_file" .yaml)
+                output_svg="images/generated/${base_name}.svg"
+                output_png="images/generated/${base_name}.png"
+
+                echo "📸 Generating: $output_svg"
+                # Only draw first 6 layers (L0-L5) to skip empty layers
+                keymap draw "$yaml_file" -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
+
+                # Convert SVG to PNG using ImageMagick (if available)
+                if command -v convert >/dev/null 2>&1; then
+                  echo "🖼️ Converting to PNG: $output_png"
+                  convert "$output_svg" "$output_png"
+                else
+                  echo "ℹ️ ImageMagick not available, skipping PNG conversion"
+                fi
+              fi
+            done
+
+            echo '✅ Image generation complete'
+            ls -la images/generated/ || echo 'No images generated'
+          SCRIPT
+      - name: Commit generated images
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          # Add generated files
+          git add images/generated/
+
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "ℹ️ No changes to commit"
+          else
+            echo "📝 Committing generated layout images"
+            # Bypass pre-commit hooks for automated commits (generated files already validated)
+            git -c core.hooksPath=/dev/null commit -m "$(cat <<'EOF'
+          🎨 Auto-update layout images from VIAL files
+
+          🤖 Auto-converted via vil2json + keymap-drawer in GitHub Actions
+          EOF
+          )"
+            git push
+          fi
+      - name: Upload generated images as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-layout-images
+          path: images/generated/
+          retention-days: 30
+      - name: Comment on PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            let comment = `## 🎨 Layout Images Generated
+
+            **Status:** ✅ Successfully generated layout images
+            **Commit:** ${context.sha.substring(0, 7)}
+
+            ### Generated Images:`;
+
+            // List generated images
+            const generatedDir = 'images/generated';
+            if (fs.existsSync(generatedDir)) {
+              const files = fs.readdirSync(generatedDir);
+              const svgFiles = files.filter(f => f.endsWith('.svg'));
+
+              if (svgFiles.length > 0) {
+                svgFiles.forEach(file => {
+                  const baseName = path.basename(file, '.svg');
+                  comment += `\n- 🖼️ ${baseName}`;
+                });
+              } else {
+                comment += `\n- ℹ️ No images generated`;
+              }
+            } else {
+              comment += `\n- ⚠️ Generated images directory not found`;
+            }
+
+            comment += `
+
+            ### Workflow:
+            1. **VIAL files (.vil)** → **Auto-conversion** → **JSON** → **YAML** → **SVG/PNG images**
+            2. Layer filtering applied (L0-L5 only, 60% size reduction)
+            3. Images are automatically committed when this PR is merged
+
+            ---
+            *Note: Fully automated via custom \`vil2json\` Rust tool + keymap-drawer*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

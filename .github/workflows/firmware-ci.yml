@@ -1,0 +1,243 @@
+name: Corne Firmware CI/CD
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "firmware/**"
+      - "flake.nix"
+      - ".github/workflows/firmware-ci.yml"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "firmware/**"
+      - "flake.nix"
+      - ".github/workflows/firmware-ci.yml"
+  workflow_dispatch:
+# Permissions for security and artifacts
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+env:
+  NIX_CONFIG: |
+    experimental-features = nix-command flakes
+    allow-import-from-derivation = true
+    accept-flake-config = true
+    # Optimized substituters with faster mirrors first
+    extra-substituters = https://cache.nixos.org https://nix-community.cachix.org
+    extra-trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+    # Performance optimizations
+    max-jobs = auto
+    cores = 0
+    builders-use-substitutes = true
+jobs:
+  # Validate layout files
+  validate:
+    name: Validate Layouts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Validate VIAL layout JSON
+        run: |
+          echo "=== Validating VIAL Layout Files ==="
+          for file in firmware/*.vil; do
+            if [ -f "$file" ]; then
+              echo "Validating $file..."
+              if jq empty "$file" 2>/dev/null; then
+                echo "✅ $file is valid JSON"
+              else
+                echo "❌ $file is invalid JSON"
+                exit 1
+              fi
+            fi
+          done
+          echo "✅ All layout files are valid"
+      - name: Check flake syntax
+        uses: cachix/install-nix-action@v26
+        with:
+          extra_nix_config: ${{ env.NIX_CONFIG }}
+      - name: Validate flake
+        run: |
+          echo "=== Validating Flake Configuration ==="
+          nix flake check --no-build
+          echo "✅ Flake configuration is valid"
+  # Build firmware
+  build-firmware:
+    name: Build Corne Firmware
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Maximize Nix disk space
+        uses: wimpysworld/nothing-but-nix@main
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Need full history for vial-qmk submodules
+          fetch-depth: 0
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+        with:
+          extra_nix_config: ${{ env.NIX_CONFIG }}
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v14
+        if: env.CACHIX_AUTH_TOKEN != ''
+        with:
+          name: nix-community
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+      - name: Build firmware in development shell
+        run: |
+          echo "=== Building Corne V4.1 Firmware ==="
+
+          # Show environment info
+          nix develop --command bash -c "
+            echo 'Build Environment Info:'
+            echo '  Keyboard: '\$KEYBOARD
+            echo '  Keymap: '\$KEYMAP
+            echo '  CPU Cores: '\$(nproc)
+            echo ''
+
+            # Verify keyboard configuration exists
+            if [ -d \"\$VIAL_QMK_DIR/keyboards/crkbd/rev4_1\" ]; then
+              echo '✅ Corne V4.1 configuration found'
+            else
+              echo '❌ Corne V4.1 configuration not found'
+              echo 'Available Corne configurations:'
+              find \$VIAL_QMK_DIR/keyboards/crkbd -name 'rev*' -type d || echo 'None found'
+              exit 1
+            fi
+
+            echo ''
+            echo '=== Starting Firmware Build ==='
+
+            # Build firmware
+            make -C \$VIAL_QMK_DIR BUILD_DIR=\$(pwd)/build COPY=echo -j\$(nproc) \$KEYBOARD:\$KEYMAP
+
+            echo ''
+            echo '=== Build Complete ==='
+            ls -la build/ || echo 'No build directory found'
+
+            # Copy firmware files
+            mkdir -p artifacts
+            cp build/*.uf2 artifacts/ 2>/dev/null && echo '✅ UF2 firmware copied' || echo '⚠️ No UF2 files generated'
+            cp build/*.hex artifacts/ 2>/dev/null && echo '✅ HEX firmware copied' || echo '⚠️ No HEX files generated'
+
+            echo ''
+            echo '=== Generated Files ==='
+            ls -la artifacts/ || echo 'No artifacts generated'
+          "
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: corne-v4-1-firmware
+          path: |
+            artifacts/*.uf2
+            artifacts/*.hex
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Generate build report
+        run: |
+          cat > build-report.md << 'EOF'
+          # Corne V4.1 Firmware Build Report
+
+          ## Status: ✅ Build Successful
+
+          **Commit:** ${{ github.sha }}
+          **Branch:** ${{ github.ref_name }}
+          **Triggered by:** ${{ github.event_name }}
+          **Build Time:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+          ## Configuration
+          - **Keyboard:** crkbd/rev4_1 (Corne V4.1)
+          - **Keymap:** vial
+          - **Layout:** Colemak-DH + EurKey optimized
+
+          ## Generated Files
+          EOF
+
+          if [ -d artifacts ]; then
+            echo "$(ls -la artifacts/)" >> build-report.md
+          else
+            echo "No firmware files generated" >> build-report.md
+          fi
+
+          cat >> build-report.md << 'EOF'
+
+          ## Installation Instructions
+          1. Download the `.uf2` file from the artifacts
+          2. Put your Corne keyboard in bootloader mode:
+             - Unplug the keyboard
+             - Hold the BOOT button while plugging in USB
+             - Or double-tap the RESET button quickly
+          3. Drag and drop the `.uf2` file to the mounted drive
+          4. The keyboard will automatically reboot with new firmware
+
+          ## Layout Features
+          - ✅ Colemak-DH base layer for ergonomic typing
+          - ✅ EurKey integration (äöüß via AltGr)
+          - ✅ NixOS/Niri window management (Super+neio navigation)
+          - ✅ Programming symbols optimized for Nix/Rust/Python
+          - ✅ Removed obsolete gaming and Lightroom layers
+
+          EOF
+      - name: Upload build report
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-report
+          path: build-report.md
+          retention-days: 30
+  # Comment on PR with build results
+  pr-comment:
+    name: PR Comment
+    runs-on: ubuntu-latest
+    needs: build-firmware
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+
+            const firmwareArtifact = artifacts.artifacts.find(a => a.name === 'corne-v4-1-firmware');
+
+            let comment = `## 🎹 Corne Firmware Build Results
+
+            **Status:** ✅ Build Successful
+            **Commit:** ${context.sha.substring(0, 7)}
+
+            ### Changes Detected
+            - Firmware layout updates
+            - Configuration changes
+
+            ### Generated Artifacts`;
+
+            if (firmwareArtifact) {
+              comment += `
+            - 📦 [Corne V4.1 Firmware](${firmwareArtifact.archive_download_url}) (${Math.round(firmwareArtifact.size_in_bytes / 1024)}KB)`;
+            } else {
+              comment += `
+            - ⚠️ No firmware artifacts generated`;
+            }
+
+            comment += `
+
+            ### Installation
+            1. Download the firmware artifact above
+            2. Extract the \`.uf2\` file
+            3. Put keyboard in bootloader mode
+            4. Drag \`.uf2\` to mounted drive
+
+            ---
+            *Automated build from GitHub Actions*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

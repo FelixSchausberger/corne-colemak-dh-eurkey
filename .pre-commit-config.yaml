@@ -1,0 +1,96 @@
+# Pre-commit configuration for corne-colemak-dh-eurkey keyboard project
+exclude: |
+  (?x)^(
+    flake\.lock|
+    tools/vil2json/target/.*|
+    build/.*|
+    firmware/.*\.(uf2|hex|json|yaml)
+  )$
+repos:
+  # File format validation and formatting
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.13.0
+    hooks:
+      - id: yamlfmt
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+        types: [executable]
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-case-conflict
+  - repo: https://github.com/sirwart/ripsecrets
+    rev: v0.1.8
+    hooks:
+      - id: ripsecrets
+        args: [--strict-ignore]
+  # Nix tools (local hooks using system binaries from nix shell)
+  - repo: local
+    hooks:
+      - id: taplo-format
+        name: Taplo TOML formatter
+        entry: taplo format
+        language: system
+        files: \.toml$
+        pass_filenames: true
+      - id: prettier
+        name: Prettier formatter
+        entry: prettier
+        language: system
+        types_or: [json, yaml, markdown]
+        args: [--tab-width=2, --write]
+      - id: alejandra
+        name: Alejandra Nix formatter
+        entry: alejandra
+        language: system
+        files: \.nix$
+      - id: deadnix
+        name: Deadnix - remove unused Nix code
+        entry: deadnix --fail --edit
+        language: system
+        files: \.nix$
+        pass_filenames: true
+      - id: statix
+        name: Statix - Nix linter
+        entry: statix fix
+        language: system
+        files: \.nix$
+        pass_filenames: true
+      - id: flake-checker
+        name: Flake checker
+        entry: flake-checker --no-telemetry
+        language: system
+        files: flake\.(nix|lock)$
+        pass_filenames: false
+  # Project-specific hooks
+  - repo: local
+    hooks:
+      - id: validate-vial-layouts
+        name: Validate VIAL layouts
+        entry: scripts/validate-vial.sh firmware/
+        language: system
+        files: \.vil$
+        pass_filenames: false
+      - id: cargo-fmt
+        name: Rust formatting (vil2json)
+        entry: cargo fmt --manifest-path tools/vil2json/Cargo.toml -- --check
+        language: system
+        files: \.rs$
+        pass_filenames: false
+      - id: cargo-clippy
+        name: Rust linting (vil2json)
+        entry: cargo clippy --manifest-path tools/vil2json/Cargo.toml -- -D warnings
+        language: system
+        files: \.rs$
+        pass_filenames: false
+      - id: conventional-commits
+        name: Validate conventional commits
+        entry: scripts/validate-commit-msg.sh
+        language: system
+        stages: [commit-msg]

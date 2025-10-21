@@ -1,0 +1,285 @@
+layout:
+  { qmk_keyboard: crkbd/rev4_1/standard, layout_name: LAYOUT_split_3x6_3_ex2 }
+layers:
+  L0:
+    - TAB
+    - Q
+    - W
+    - F
+    - P
+    - B
+    - GESC
+    - TD(2)
+    - J
+    - L
+    - U
+    - Y
+    - SCOLON
+    - BSPACE
+    - LSPO
+    - { t: A, h: MOD_LGUI }
+    - { t: R, h: MOD_LALT }
+    - { t: S, h: MOD_LCTL }
+    - { t: T, h: MOD_LSFT }
+    - G
+    - RCPC
+    - RALT
+    - M
+    - { t: N, h: MOD_RSFT }
+    - { t: E, h: MOD_RCTL }
+    - { t: I, h: MOD_RALT }
+    - { t: O, h: MOD_RGUI }
+    - TD(1)
+    - LGUI
+    - Z
+    - X
+    - C
+    - D
+    - V
+    - K
+    - H
+    - ","
+    - .
+    - /
+    - "'"
+    - LALT
+    - FN MO13
+    - SPACE
+    - SFTENT
+    - FN MO23
+    - RALT
+  L1:
+    - { t: ▽, type: trans }
+    - "1"
+    - "2"
+    - "3"
+    - "4"
+    - "5"
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - "6"
+    - "7"
+    - "8"
+    - "9"
+    - "0"
+    - BSPACE
+    - { t: ▽, type: trans }
+    - VOLU
+    - LEFT
+    - DOWN
+    - UP
+    - RIGHT
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - LEFT
+    - DOWN
+    - UP
+    - RIGHT
+    - ""
+    - ""
+    - { t: ▽, type: trans }
+    - VOLD
+    - MUTE
+    - { t: L3, h: toggle }
+    - BRIU
+    - BRID
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - LGUI
+    - { t: ▽, type: trans }
+    - SPACE
+    - SFTENT
+    - { t: ▽, type: trans }
+    - RGUI
+  L2:
+    - TAB
+    - Sft+1
+    - Sft+2
+    - Sft+3
+    - Sft+4
+    - Sft+5
+    - LCTRL
+    - RCTRL
+    - Sft+6
+    - Sft+7
+    - Sft+8
+    - Sft+9
+    - Sft+0
+    - BSPACE
+    - LCTRL
+    - AltGr+A
+    - ""
+    - AltGr+S
+    - ""
+    - ""
+    - LALT
+    - RALT
+    - "-"
+    - "="
+    - LBRACKET
+    - AltGr+U
+    - AltGr+O
+    - "`"
+    - LSHIFT
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - Sft+-
+    - Sft+=
+    - Sft+LBRACKET
+    - RBRACKET
+    - BSLASH
+    - Sft+`
+    - LGUI
+    - { t: ▽, type: trans }
+    - SPACE
+    - SFTENT
+    - { t: ▽, type: trans }
+    - RGUI
+  L3:
+    - RESET
+    - F1
+    - F2
+    - F3
+    - F4
+    - F5
+    - F6
+    - F7
+    - F8
+    - F9
+    - F10
+    - F11
+    - F12
+    - TD(3)
+    - RGB TOG
+    - RGB HUI
+    - RGB SAI
+    - RGB VAI
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - PGUP
+    - HOME
+    - RGB MOD
+    - RGB HUD
+    - RGB SAD
+    - RGB VAD
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - ""
+    - PGDOWN
+    - END
+    - LGUI
+    - { t: ▽, type: trans }
+    - SPACE
+    - SFTENT
+    - { t: ▽, type: trans }
+    - RGUI
+  L4:
+    - Gui+1
+    - Gui+2
+    - Gui+3
+    - Gui+4
+    - Gui+5
+    - Gui+6
+    - { t: ▽, type: trans }
+    - Sft+Gui+1
+    - Sft+Gui+2
+    - Sft+Gui+3
+    - Sft+Gui+4
+    - Sft+Gui+5
+    - Sft+Gui+6
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - N
+    - E
+    - I
+    - O
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - Gui+N
+    - Gui+E
+    - Gui+I
+    - Gui+O
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - Sft+Gui+N
+    - Sft+Gui+E
+    - Sft+Gui+I
+    - Sft+Gui+O
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - LGUI
+    - { t: ▽, type: trans }
+    - SPACE
+    - SFTENT
+    - { t: ▽, type: trans }
+    - RGUI
+  L5:
+    - M0
+    - M1
+    - M2
+    - PSCREEN
+    - Sft+PSCREEN
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }
+    - { t: ▽, type: trans }

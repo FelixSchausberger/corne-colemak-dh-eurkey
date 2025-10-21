@@ -1,0 +1,20 @@
+# yamllint configuration for keyboard configuration project
+# Allow longer lines for GitHub Actions and keyboard configurations
+
+extends: default
+rules:
+  # Allow longer lines for GitHub Actions workflows and pre-commit configs
+  line-length:
+    max: 200
+  # Be more permissive with document start
+  document-start:
+    present: false
+  # Allow truthy values (GitHub Actions uses 'on')
+  truthy:
+    allowed-values: ["true", "false", "on", "off", "yes", "no"]
+  # Allow more spacing flexibility
+  comments:
+    min-spaces-from-content: 1
+  # Allow trailing spaces in multiline strings
+  trailing-spaces:
+    level: warning
