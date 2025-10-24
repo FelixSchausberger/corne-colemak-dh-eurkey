@@ -12,36 +12,36 @@ and a complete development environment for a personal ergonomic typing setup usi
 - **Key Arrangement**: Colemak-DH (Matrix) for improved ergonomics
 - **Firmware**: VIAL (open-source keyboard configuration tool)
 - **Build System**: Nix flakes with Vial-QMK integration
-- **Version Control**: Jujutsu (jj) with dev-main branching strategy
+- **Version Control**: Jujutsu (jj) with single main branch workflow
 
 ## Development Workflow
 
-### Jujutsu Workflow with Dev-Main Branching
+### Jujutsu Workflow
 
-The project uses Jujutsu (jj) for version control with a dev-main branch strategy:
+The project uses Jujutsu (jj) for version control with a simple single-branch workflow:
 
 **Branch Strategy:**
 
-- **dev**: Daily development branch (default working branch)
-- **main**: Stable, always-green branch
-- PRs go from dev → main when ready for stable release
+- **main**: Single branch for all development and stable releases
+- All work is committed directly to main
+- CI ensures quality through automated validation
 
-**Daily Workflow on Dev Branch:**
+**Daily Workflow:**
 
 ```bash
-# Work directly on dev branch
+# Work directly on main branch
 jj describe -m "feat: add new feature"
 
 # Or use AI-powered commit message (if lumen is available)
 jjdescribe
 
-# Push changes to remote dev branch
+# Push changes to remote main branch
 jj git push
 ```
 
 **Creating Feature Branches (Optional):**
 
-For experimental features that need isolation from dev:
+For experimental features that need isolation:
 
 ```bash
 jjbranch  # or jjb
@@ -50,18 +50,13 @@ jjbranch  # or jjb
 # 2. Enter description (lowercase, hyphens only)
 # Result: Creates branch from current revision, commits with conventional format
 
-# When ready, use jjpush to create PR back to dev
+# When ready, use jjpush to create PR back to main
 jjpush
 ```
 
-**Merging Dev to Main:**
-
-When dev is stable and ready for release, create a PR from dev → main manually via GitHub UI.
-
 **Key points:**
 
-- Work happens on `dev` by default
-- `main` only receives tested, stable changes from `dev`
+- All work happens on `main` by default (single developer workflow)
 - Feature branches (via `jjbranch`) are optional for experimental work
 - Branch names follow: `type/description` (e.g., `feat/add-auto-merge`)
 - Commit messages follow conventional commits: `type: description`

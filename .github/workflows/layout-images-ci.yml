@@ -1,12 +1,12 @@
 name: Layout Images CI/CD
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "firmware/*.vil"
       - ".github/workflows/layout-images-ci.yml"
   pull_request:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "firmware/*.vil"
       - ".github/workflows/layout-images-ci.yml"
