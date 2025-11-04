@@ -1,0 +1,89 @@
+# Keymap Drawer Configuration
+# Maps QMK keycodes to readable symbols for visualization
+
+parse_config:
+  qmk_keyboard: crkbd/rev4_1/standard
+  qmk_layout: LAYOUT_split_3x6_3_ex2
+  # Map complex keycodes to their actual symbols
+  raw_binding_map:
+    # Shifted number row (symbols)
+    "LSFT(KC_1)": "!"
+    "LSFT(KC_2)": "@"
+    "LSFT(KC_3)": "#"
+    "LSFT(KC_4)": "$"
+    "LSFT(KC_5)": "%"
+    "LSFT(KC_6)": "^"
+    "LSFT(KC_7)": "&"
+    "LSFT(KC_8)": "*"
+    "LSFT(KC_9)": "("
+    "LSFT(KC_0)": ")"
+
+    # Brackets and braces
+    "KC_LBRACKET": "["
+    "KC_RBRACKET": "]"
+    "LSFT(KC_LBRACKET)": "{"
+    "LSFT(KC_RBRACKET)": "}"
+
+    # Math and equals
+    "KC_EQUAL": "="
+    "LSFT(KC_EQUAL)": "+"
+    "KC_MINUS": "-"
+    "LSFT(KC_MINUS)": "_"
+
+    # Slashes and pipes
+    "KC_BSLASH": "\\"
+    "LSFT(KC_BSLASH)": "|"
+    "KC_SLASH": "/"
+    "LSFT(KC_SLASH)": "?"
+
+    # Quotes and backticks
+    "KC_GRAVE": "`"
+    "LSFT(KC_GRAVE)": "~"
+    "KC_QUOTE": "'"
+    "LSFT(KC_QUOTE)": '"'
+
+    # Semicolon and colon
+    "KC_SCOLON": ";"
+    "LSFT(KC_SCOLON)": ":"
+
+    # Comma and period
+    "KC_COMMA": ","
+    "KC_DOT": "."
+    "LSFT(KC_COMMA)": "<"
+    "LSFT(KC_DOT)": ">"
+
+    # EurKey characters (AltGr combinations)
+    "RALT(KC_A)": "ä"
+    "RALT(KC_O)": "ö"
+    "RALT(KC_U)": "ü"
+    "RALT(KC_S)": "ß"
+
+draw_config:
+  # Use shorter, more readable labels
+  key_w: 52
+  key_h: 52
+  split_gap: 30
+
+  # Customize how layer labels appear
+  draw_key_sides: false
+
+  # Use actual symbols in output
+  glyph_tap_map:
+    # Basic symbols
+    BSPACE: "⌫"
+    SPACE: "␣"
+    TAB: "⭾"
+    SFTENT: "⏎"
+
+    # Arrow keys
+    LEFT: "←"
+    RIGHT: "→"
+    UP: "↑"
+    DOWN: "↓"
+
+    # Volume and brightness
+    VOLU: "🔊"
+    VOLD: "🔉"
+    MUTE: "🔇"
+    BRIU: "☀+"
+    BRID: "☀-"

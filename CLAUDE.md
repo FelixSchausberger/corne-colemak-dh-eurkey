@@ -262,13 +262,15 @@ The CI automatically handles conversion when `.vil` files are pushed:
 - name: Generate layout images with layer filtering
   run: |
     # Only draw first 6 layers (L0-L5) to skip empty layers
-    keymap draw "$yaml_file" -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
+    # Use custom config to display actual symbols instead of keycodes
+    keymap draw "$yaml_file" -c keymap-drawer.yaml -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
 ```
 
 **Benefits:**
 
 - Automatic conversion on every `.vil` file change
 - Layer filtering reduces SVG size by ~60% (137KB → 55KB)
+- Symbol translation via `keymap-drawer.yaml` config (shows `!` instead of "Sft+1")
 - No manual intervention needed
 - Reproducible builds via Nix
 
@@ -321,8 +323,9 @@ Only commit `.vil` files - CI generates `.json`, `.yaml`, and images automatical
 #### Step 3: Layer-Filtered Image Generation
 
 ```bash
-# Generate SVG with only active layers (L0-L5)
+# Generate SVG with only active layers (L0-L5) and symbol translation
 keymap draw firmware/your-layout.yaml \
+  -c keymap-drawer.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/your-layout.svg
 
@@ -344,11 +347,12 @@ For local development and preview:
 ```bash
 nix develop
 
-# Complete workflow with layer filtering
+# Complete workflow with layer filtering and symbol translation
 vil2json firmware/corne_v4-1_custom_hrmods.vil -m 6 -f
 keymap parse -q firmware/corne_v4-1_custom_hrmods.json \
   -o firmware/corne_v4-1_custom_hrmods.yaml
 keymap draw firmware/corne_v4-1_custom_hrmods.yaml \
+  -c keymap-drawer.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/corne_v4-1_custom_hrmods.svg
 ```
@@ -360,11 +364,12 @@ nix develop
 
 # 1. Edit layout in VIAL, save as .vil file
 
-# 2. (Optional) Local preview with layer filtering
+# 2. (Optional) Local preview with layer filtering and symbol translation
 vil2json firmware/corne_v4-1_custom_hrmods.vil -m 6 -f
 keymap parse -q firmware/corne_v4-1_custom_hrmods.json \
   -o firmware/corne_v4-1_custom_hrmods.yaml
 keymap draw firmware/corne_v4-1_custom_hrmods.yaml \
+  -c keymap-drawer.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/corne_v4-1_custom_hrmods.svg
 
@@ -390,6 +395,37 @@ The `vil2json` Rust tool is packaged in `flake.nix`:
 ```
 
 Available automatically in `nix develop` shell.
+
+#### Keymap-Drawer Configuration
+
+The `keymap-drawer.yaml` config file provides symbol translation for better visualization:
+
+```yaml
+# Maps QMK keycodes to actual symbols
+parse_config:
+  raw_binding_map:
+    "LSFT(KC_1)": "!" # Shows ! instead of "Sft+1"
+    "KC_LBRACKET": "[" # Shows [ instead of "LBRACKET"
+    "RALT(KC_A)": "ä" # Shows ä for EurKey
+    # ... and more
+```
+
+**Purpose:**
+
+- Translates QMK keycodes like `LSFT(KC_1)` to readable symbols `!`
+- Makes generated SVG images show actual glyphs instead of technical names
+- Improves layout visualization for documentation and understanding
+
+**What it translates:**
+
+- Shifted numbers: `! @ # $ % ^ & * ( )`
+- Brackets: `[ ] { }`
+- Math symbols: `+ - = _`
+- Pipes and slashes: `| \ / ?`
+- Quotes: `' " \` ~`
+- EurKey characters: `ä ö ü ß`
+
+The config is automatically used by CI and can be manually used with `-c keymap-drawer.yaml` flag.
 
 ### Common Tasks
 
