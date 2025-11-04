@@ -100,7 +100,8 @@ jobs:
                 echo "📸 Generating: $output_svg"
                 # Only draw first 6 layers (L0-L5) to skip empty layers
                 # Use custom config to display actual symbols instead of keycodes
-                if keymap draw "$yaml_file" -c keymap-drawer.yaml -s L0 L1 L2 L3 L4 L5 -o "$output_svg"; then
+                # NOTE: -c must come BEFORE the draw subcommand
+                if keymap -c keymap-drawer.yaml draw "$yaml_file" -s L0 L1 L2 L3 L4 L5 -o "$output_svg"; then
                   echo "  ✅ SVG generated successfully"
 
                   # Convert SVG to PDF for printing
