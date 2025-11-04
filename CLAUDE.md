@@ -244,7 +244,7 @@ The repository uses an **automated three-step workflow** with a custom Rust tool
 
 1. **VIAL → JSON** (`.vil` → `.json`): Custom Rust tool (`vil2json`) converts VIAL layouts to QMK keymap.json
 2. **JSON → YAML** (`.json` → `.yaml`): Parse with keymap-drawer
-3. **YAML → Images** (`.yaml` → `.svg/.png`): Generate visualizations with layer filtering (automated in CI)
+3. **YAML → Images** (`.yaml` → `.svg/.pdf/.png`): Generate visualizations with layer filtering and symbol translation (automated in CI)
 
 #### Automated Workflow (Default Behavior)
 
@@ -259,18 +259,23 @@ The CI automatically handles conversion when `.vil` files are pushed:
       keymap parse -q "$json_file" -o "$yaml_file"
     done
 
-- name: Generate layout images with layer filtering
+- name: Generate layout images with layer filtering and symbol translation
   run: |
     # Only draw first 6 layers (L0-L5) to skip empty layers
     # Use custom config to display actual symbols instead of keycodes
     keymap draw "$yaml_file" -c keymap-drawer.yaml -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
+
+    # Convert to PDF for printing
+    rsvg-convert -f pdf -o "$output_pdf" "$output_svg"
 ```
 
 **Benefits:**
 
 - Automatic conversion on every `.vil` file change
 - Layer filtering reduces SVG size by ~60% (137KB → 55KB)
-- Symbol translation via `keymap-drawer.yaml` config (shows `!` instead of "Sft+1")
+- Symbol translation via `keymap-drawer.yaml` config (shows `!` instead of `Sft+1`, `[` instead of `LBRACKET`)
+- PDF generation for printable reference sheets
+- Error handling for failed conversions (continues with warnings)
 - No manual intervention needed
 - Reproducible builds via Nix
 
@@ -329,7 +334,10 @@ keymap draw firmware/your-layout.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/your-layout.svg
 
-# Optional: Convert to PNG
+# Convert to PDF for printing (recommended for learning layouts)
+rsvg-convert -f pdf -o images/generated/your-layout.pdf images/generated/your-layout.svg
+
+# Optional: Convert to PNG for preview
 convert images/generated/your-layout.svg images/generated/your-layout.png
 ```
 
@@ -339,6 +347,13 @@ convert images/generated/your-layout.svg images/generated/your-layout.png
 - Filtering reduces file size by ~60%
 - Improves README load times
 - Keeps visualizations focused on active layers
+
+**Symbol Translation:**
+
+- The `keymap-drawer.yaml` config maps QMK keycodes to readable symbols
+- Format after `keymap parse`: `LBRACKET` (not `KC_LBRACKET`), `Sft+1` (not `LSFT(KC_1)`)
+- Shows actual characters: `[`, `{`, `!`, `ä` instead of internal keycodes
+- Makes layouts much easier to read and understand
 
 #### Local Preview (Optional)
 

@@ -91,6 +91,7 @@
             # Additional utilities
             jq # JSON processing for layout files
             unstable.keymap-drawer # Layout visualization tool
+            librsvg # SVG to PDF conversion (rsvg-convert command)
 
             # Rust tool: VIAL to QMK JSON converter
             (pkgs.rustPlatform.buildRustPackage {

@@ -63,11 +63,17 @@ jobs:
 
                 # Convert .vil to JSON (max 6 layers to skip empty ones)
                 echo "  📄 Converting: $vil_file"
-                vil2json "$vil_file" -o "$json_file" -m 6
-
-                # Parse JSON to YAML
-                echo "  📝 Generating: $yaml_file"
-                keymap parse -q "$json_file" -o "$yaml_file"
+                if vil2json "$vil_file" -o "$json_file" -m 6; then
+                  # Parse JSON to YAML
+                  echo "  📝 Generating: $yaml_file"
+                  if keymap parse -q "$json_file" -o "$yaml_file"; then
+                    echo "  ✅ Success: $base_name"
+                  else
+                    echo "  ⚠️ Warning: Failed to parse $json_file to YAML"
+                  fi
+                else
+                  echo "  ⚠️ Warning: Failed to convert $vil_file to JSON"
+                fi
               fi
             done
 
@@ -88,25 +94,40 @@ jobs:
               if [ -f "$yaml_file" ]; then
                 base_name=$(basename "$yaml_file" .yaml)
                 output_svg="images/generated/${base_name}.svg"
+                output_pdf="images/generated/${base_name}.pdf"
                 output_png="images/generated/${base_name}.png"
 
                 echo "📸 Generating: $output_svg"
                 # Only draw first 6 layers (L0-L5) to skip empty layers
                 # Use custom config to display actual symbols instead of keycodes
-                keymap draw "$yaml_file" -c keymap-drawer.yaml -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
+                if keymap draw "$yaml_file" -c keymap-drawer.yaml -s L0 L1 L2 L3 L4 L5 -o "$output_svg"; then
+                  echo "  ✅ SVG generated successfully"
 
-                # Convert SVG to PNG using ImageMagick (if available)
-                if command -v convert >/dev/null 2>&1; then
-                  echo "🖼️ Converting to PNG: $output_png"
-                  convert "$output_svg" "$output_png"
+                  # Convert SVG to PDF for printing
+                  if command -v rsvg-convert >/dev/null 2>&1; then
+                    echo "  📄 Converting to PDF: $output_pdf"
+                    rsvg-convert -f pdf -o "$output_pdf" "$output_svg"
+                    echo "  ✅ PDF generated successfully"
+                  else
+                    echo "  ℹ️ rsvg-convert not available, skipping PDF conversion"
+                  fi
+
+                  # Convert SVG to PNG using ImageMagick (if available)
+                  if command -v convert >/dev/null 2>&1; then
+                    echo "  🖼️ Converting to PNG: $output_png"
+                    convert "$output_svg" "$output_png"
+                    echo "  ✅ PNG generated successfully"
+                  else
+                    echo "  ℹ️ ImageMagick not available, skipping PNG conversion"
+                  fi
                 else
-                  echo "ℹ️ ImageMagick not available, skipping PNG conversion"
+                  echo "  ⚠️ Warning: Failed to generate image for $yaml_file"
                 fi
               fi
             done
 
             echo '✅ Image generation complete'
-            ls -la images/generated/ || echo 'No images generated'
+            ls -lh images/generated/ || echo 'No images generated'
           SCRIPT
       - name: Commit generated images
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -127,6 +148,7 @@ jobs:
           🎨 Auto-update layout images from VIAL files
 
           🤖 Auto-converted via vil2json + keymap-drawer in GitHub Actions
+          📄 Generated formats: SVG (web), PDF (printing), PNG (preview)
           EOF
           )"
             git push
@@ -149,6 +171,7 @@ jobs:
 
             **Status:** ✅ Successfully generated layout images
             **Commit:** ${context.sha.substring(0, 7)}
+            **Formats:** SVG (web), PDF (printing), PNG (preview)
 
             ### Generated Images:`;
 
@@ -173,12 +196,14 @@ jobs:
             comment += `
 
             ### Workflow:
-            1. **VIAL files (.vil)** → **Auto-conversion** → **JSON** → **YAML** → **SVG/PNG images**
+            1. **VIAL files (.vil)** → **Auto-conversion** → **JSON** → **YAML** → **SVG/PDF/PNG images**
             2. Layer filtering applied (L0-L5 only, 60% size reduction)
-            3. Images are automatically committed when this PR is merged
+            3. Symbol translation (shows \`[\` instead of \`LBRACKET\`)
+            4. PDF generation for printing layouts
+            5. Images are automatically committed when this PR is merged
 
             ---
-            *Note: Fully automated via custom \`vil2json\` Rust tool + keymap-drawer*`;
+            *Note: Fully automated via custom \`vil2json\` Rust tool + keymap-drawer + librsvg*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,

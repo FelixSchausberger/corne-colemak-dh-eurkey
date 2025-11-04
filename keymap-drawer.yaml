@@ -4,59 +4,82 @@
 parse_config:
   qmk_keyboard: crkbd/rev4_1/standard
   qmk_layout: LAYOUT_split_3x6_3_ex2
-  # Map complex keycodes to their actual symbols
+  # Map keycodes to their actual symbols
+  # Format after keymap parse: KEYCODE (not KC_KEYCODE) and Sft+ (not LSFT())
   raw_binding_map:
-    # Shifted number row (symbols)
-    "LSFT(KC_1)": "!"
-    "LSFT(KC_2)": "@"
-    "LSFT(KC_3)": "#"
-    "LSFT(KC_4)": "$"
-    "LSFT(KC_5)": "%"
-    "LSFT(KC_6)": "^"
-    "LSFT(KC_7)": "&"
-    "LSFT(KC_8)": "*"
-    "LSFT(KC_9)": "("
-    "LSFT(KC_0)": ")"
+    # Shifted number row (symbols) - Sft+ format
+    "Sft+1": "!"
+    "Sft+2": "@"
+    "Sft+3": "#"
+    "Sft+4": "$"
+    "Sft+5": "%"
+    "Sft+6": "^"
+    "Sft+7": "&"
+    "Sft+8": "*"
+    "Sft+9": "("
+    "Sft+0": ")"
 
     # Brackets and braces
-    "KC_LBRACKET": "["
-    "KC_RBRACKET": "]"
-    "LSFT(KC_LBRACKET)": "{"
-    "LSFT(KC_RBRACKET)": "}"
+    "LBRACKET": "["
+    "RBRACKET": "]"
+    "Sft+LBRACKET": "{"
+    "Sft+RBRACKET": "}"
 
     # Math and equals
-    "KC_EQUAL": "="
-    "LSFT(KC_EQUAL)": "+"
-    "KC_MINUS": "-"
-    "LSFT(KC_MINUS)": "_"
+    "EQUAL": "="
+    "Sft+EQUAL": "+"
+    "MINUS": "-"
+    "Sft+MINUS": "_"
 
     # Slashes and pipes
-    "KC_BSLASH": "\\"
-    "LSFT(KC_BSLASH)": "|"
-    "KC_SLASH": "/"
-    "LSFT(KC_SLASH)": "?"
+    "BSLASH": "\\"
+    "Sft+BSLASH": "|"
+    "SLASH": "/"
+    "Sft+SLASH": "?"
 
     # Quotes and backticks
-    "KC_GRAVE": "`"
-    "LSFT(KC_GRAVE)": "~"
-    "KC_QUOTE": "'"
-    "LSFT(KC_QUOTE)": '"'
+    "GRAVE": "`"
+    "Sft+GRAVE": "~"
+    "QUOTE": "'"
+    "Sft+QUOTE": '"'
 
     # Semicolon and colon
-    "KC_SCOLON": ";"
-    "LSFT(KC_SCOLON)": ":"
+    "SCOLON": ";"
+    "Sft+SCOLON": ":"
 
     # Comma and period
-    "KC_COMMA": ","
-    "KC_DOT": "."
-    "LSFT(KC_COMMA)": "<"
-    "LSFT(KC_DOT)": ">"
+    "COMMA": ","
+    "DOT": "."
+    "Sft+COMMA": "<"
+    "Sft+DOT": ">"
 
-    # EurKey characters (AltGr combinations)
-    "RALT(KC_A)": "ä"
-    "RALT(KC_O)": "ö"
-    "RALT(KC_U)": "ü"
-    "RALT(KC_S)": "ß"
+    # EurKey characters (RALT format from keymap parse)
+    "RALT(A)": "ä"
+    "RALT(O)": "ö"
+    "RALT(U)": "ü"
+    "RALT(S)": "ß"
+
+    # GUI/Super key combinations for window management
+    "GUI(1)": "󰎤" # Super+1 workspace
+    "GUI(2)": "󰎧" # Super+2 workspace
+    "GUI(3)": "󰎪" # Super+3 workspace
+    "GUI(4)": "󰎭" # Super+4 workspace
+    "GUI(5)": "󰎱" # Super+5 workspace
+    "GUI(6)": "󰎹" # Super+6 workspace
+    "GUI(N)": "N" # Super+N navigation
+    "GUI(E)": "E" # Super+E navigation
+    "GUI(I)": "I" # Super+I navigation
+    "GUI(O)": "O" # Super+O navigation
+    "Sft+GUI(1)": "󰎤" # Shift+Super+1
+    "Sft+GUI(2)": "󰎧" # Shift+Super+2
+    "Sft+GUI(3)": "󰎪" # Shift+Super+3
+    "Sft+GUI(4)": "󰎭" # Shift+Super+4
+    "Sft+GUI(5)": "󰎱" # Shift+Super+5
+    "Sft+GUI(6)": "󰎹" # Shift+Super+6
+    "Sft+GUI(N)": "N" # Shift+Super+N
+    "Sft+GUI(E)": "E" # Shift+Super+E
+    "Sft+GUI(I)": "I" # Shift+Super+I
+    "Sft+GUI(O)": "O" # Shift+Super+O
 
 draw_config:
   # Use shorter, more readable labels
