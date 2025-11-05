@@ -12,36 +12,36 @@ and a complete development environment for a personal ergonomic typing setup usi
 - **Key Arrangement**: Colemak-DH (Matrix) for improved ergonomics
 - **Firmware**: VIAL (open-source keyboard configuration tool)
 - **Build System**: Nix flakes with Vial-QMK integration
-- **Version Control**: Jujutsu (jj) with dev-main branching strategy
+- **Version Control**: Jujutsu (jj) with single main branch workflow
 
 ## Development Workflow
 
-### Jujutsu Workflow with Dev-Main Branching
+### Jujutsu Workflow
 
-The project uses Jujutsu (jj) for version control with a dev-main branch strategy:
+The project uses Jujutsu (jj) for version control with a simple single-branch workflow:
 
 **Branch Strategy:**
 
-- **dev**: Daily development branch (default working branch)
-- **main**: Stable, always-green branch
-- PRs go from dev → main when ready for stable release
+- **main**: Single branch for all development and stable releases
+- All work is committed directly to main
+- CI ensures quality through automated validation
 
-**Daily Workflow on Dev Branch:**
+**Daily Workflow:**
 
 ```bash
-# Work directly on dev branch
+# Work directly on main branch
 jj describe -m "feat: add new feature"
 
 # Or use AI-powered commit message (if lumen is available)
 jjdescribe
 
-# Push changes to remote dev branch
+# Push changes to remote main branch
 jj git push
 ```
 
 **Creating Feature Branches (Optional):**
 
-For experimental features that need isolation from dev:
+For experimental features that need isolation:
 
 ```bash
 jjbranch  # or jjb
@@ -50,18 +50,13 @@ jjbranch  # or jjb
 # 2. Enter description (lowercase, hyphens only)
 # Result: Creates branch from current revision, commits with conventional format
 
-# When ready, use jjpush to create PR back to dev
+# When ready, use jjpush to create PR back to main
 jjpush
 ```
 
-**Merging Dev to Main:**
-
-When dev is stable and ready for release, create a PR from dev → main manually via GitHub UI.
-
 **Key points:**
 
-- Work happens on `dev` by default
-- `main` only receives tested, stable changes from `dev`
+- All work happens on `main` by default (single developer workflow)
 - Feature branches (via `jjbranch`) are optional for experimental work
 - Branch names follow: `type/description` (e.g., `feat/add-auto-merge`)
 - Commit messages follow conventional commits: `type: description`
@@ -249,7 +244,7 @@ The repository uses an **automated three-step workflow** with a custom Rust tool
 
 1. **VIAL → JSON** (`.vil` → `.json`): Custom Rust tool (`vil2json`) converts VIAL layouts to QMK keymap.json
 2. **JSON → YAML** (`.json` → `.yaml`): Parse with keymap-drawer
-3. **YAML → Images** (`.yaml` → `.svg/.png`): Generate visualizations with layer filtering (automated in CI)
+3. **YAML → Images** (`.yaml` → `.svg/.pdf/.png`): Generate visualizations with layer filtering and symbol translation (automated in CI)
 
 #### Automated Workflow (Default Behavior)
 
@@ -261,19 +256,27 @@ The CI automatically handles conversion when `.vil` files are pushed:
   run: |
     for vil_file in firmware/*.vil; do
       vil2json "$vil_file" -o "$json_file" -m 6  # Max 6 layers
-      keymap parse -q "$json_file" -o "$yaml_file"
+      # Apply config during parse to transform keycodes to symbols
+      keymap -c keymap-drawer.yaml parse -q "$json_file" -o "$yaml_file"
     done
 
-- name: Generate layout images with layer filtering
+- name: Generate layout images with layer filtering and symbol translation
   run: |
     # Only draw first 6 layers (L0-L5) to skip empty layers
-    keymap draw "$yaml_file" -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
+    # Use custom config for styling and glyph mapping
+    keymap -c keymap-drawer.yaml draw "$yaml_file" -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
+
+    # Convert to PDF for printing
+    rsvg-convert -f pdf -o "$output_pdf" "$output_svg"
 ```
 
 **Benefits:**
 
 - Automatic conversion on every `.vil` file change
 - Layer filtering reduces SVG size by ~60% (137KB → 55KB)
+- Symbol translation via `keymap-drawer.yaml` config (shows `!` instead of `Sft+1`, `[` instead of `LBRACKET`)
+- PDF generation for printable reference sheets
+- Error handling for failed conversions (continues with warnings)
 - No manual intervention needed
 - Reproducible builds via Nix
 
@@ -317,8 +320,8 @@ vil2json firmware/your-layout.vil \
 #### Step 2: Generate YAML for Keymap-Drawer
 
 ```bash
-# Parse QMK JSON to keymap-drawer YAML format
-keymap parse -q firmware/your-layout.json -o firmware/your-layout.yaml
+# Parse QMK JSON to keymap-drawer YAML format with config to transform keycodes to symbols
+keymap -c keymap-drawer.yaml parse -q firmware/your-layout.json -o firmware/your-layout.yaml
 ```
 
 Only commit `.vil` files - CI generates `.json`, `.yaml`, and images automatically.
@@ -326,12 +329,15 @@ Only commit `.vil` files - CI generates `.json`, `.yaml`, and images automatical
 #### Step 3: Layer-Filtered Image Generation
 
 ```bash
-# Generate SVG with only active layers (L0-L5)
-keymap draw firmware/your-layout.yaml \
+# Generate SVG with only active layers (L0-L5) and symbol translation
+keymap -c keymap-drawer.yaml draw firmware/your-layout.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/your-layout.svg
 
-# Optional: Convert to PNG
+# Convert to PDF for printing (recommended for learning layouts)
+rsvg-convert -f pdf -o images/generated/your-layout.pdf images/generated/your-layout.svg
+
+# Optional: Convert to PNG for preview
 convert images/generated/your-layout.svg images/generated/your-layout.png
 ```
 
@@ -342,6 +348,16 @@ convert images/generated/your-layout.svg images/generated/your-layout.png
 - Improves README load times
 - Keeps visualizations focused on active layers
 
+**Symbol Translation:**
+
+- The `keymap-drawer.yaml` config maps QMK keycodes to readable symbols using `raw_binding_map`
+- **Critical**: Apply config during BOTH `parse` and `draw` steps:
+  - `keymap -c keymap-drawer.yaml parse ...` - Transforms keycodes to symbols in YAML
+  - `keymap -c keymap-drawer.yaml draw ...` - Applies styling and glyph mappings in SVG
+- Format after `keymap parse`: `LBRACKET` (not `KC_LBRACKET`), `Sft+1` (not `LSFT(KC_1)`), `Gui+1` (not `GUI(KC_1)`), `AltGr+A` (not `RALT(KC_A)`)
+- Shows actual characters: `[`, `{`, `!`, `ä` instead of internal keycodes
+- Makes layouts much easier to read and understand
+
 #### Local Preview (Optional)
 
 For local development and preview:
@@ -349,11 +365,11 @@ For local development and preview:
 ```bash
 nix develop
 
-# Complete workflow with layer filtering
+# Complete workflow with layer filtering and symbol translation
 vil2json firmware/corne_v4-1_custom_hrmods.vil -m 6 -f
-keymap parse -q firmware/corne_v4-1_custom_hrmods.json \
+keymap -c keymap-drawer.yaml parse -q firmware/corne_v4-1_custom_hrmods.json \
   -o firmware/corne_v4-1_custom_hrmods.yaml
-keymap draw firmware/corne_v4-1_custom_hrmods.yaml \
+keymap -c keymap-drawer.yaml draw firmware/corne_v4-1_custom_hrmods.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/corne_v4-1_custom_hrmods.svg
 ```
@@ -365,11 +381,11 @@ nix develop
 
 # 1. Edit layout in VIAL, save as .vil file
 
-# 2. (Optional) Local preview with layer filtering
+# 2. (Optional) Local preview with layer filtering and symbol translation
 vil2json firmware/corne_v4-1_custom_hrmods.vil -m 6 -f
-keymap parse -q firmware/corne_v4-1_custom_hrmods.json \
+keymap -c keymap-drawer.yaml parse -q firmware/corne_v4-1_custom_hrmods.json \
   -o firmware/corne_v4-1_custom_hrmods.yaml
-keymap draw firmware/corne_v4-1_custom_hrmods.yaml \
+keymap -c keymap-drawer.yaml draw firmware/corne_v4-1_custom_hrmods.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/corne_v4-1_custom_hrmods.svg
 
@@ -395,6 +411,37 @@ The `vil2json` Rust tool is packaged in `flake.nix`:
 ```
 
 Available automatically in `nix develop` shell.
+
+#### Keymap-Drawer Configuration
+
+The `keymap-drawer.yaml` config file provides symbol translation for better visualization:
+
+```yaml
+# Maps QMK keycodes to actual symbols
+parse_config:
+  raw_binding_map:
+    "LSFT(KC_1)": "!" # Shows ! instead of "Sft+1"
+    "KC_LBRACKET": "[" # Shows [ instead of "LBRACKET"
+    "RALT(KC_A)": "ä" # Shows ä for EurKey
+    # ... and more
+```
+
+**Purpose:**
+
+- Translates QMK keycodes like `LSFT(KC_1)` to readable symbols `!`
+- Makes generated SVG images show actual glyphs instead of technical names
+- Improves layout visualization for documentation and understanding
+
+**What it translates:**
+
+- Shifted numbers: `! @ # $ % ^ & * ( )`
+- Brackets: `[ ] { }`
+- Math symbols: `+ - = _`
+- Pipes and slashes: `| \ / ?`
+- Quotes: `' " \` ~`
+- EurKey characters: `ä ö ü ß`
+
+The config is automatically used by CI and can be manually used with `-c keymap-drawer.yaml` flag.
 
 ### Common Tasks
 
