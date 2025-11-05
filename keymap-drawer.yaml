@@ -111,17 +111,40 @@ parse_config:
     # Tap-Dance keys - show both tap/hold functions
     "TD(0)": "Esc\n⌃" # Tap: Escape, Hold: Control
     "TD(1)": "Del\n⇧" # Tap: Delete, Hold: Shift
-    "TD(2)": ";\n;" # Tap: ;, Double-tap: ; (placeholder)
-    "TD(3)": "🖵\n🖵" # Tap: Screenshot-full macro, Hold: Print Screen
+    "TD(2)": ";\n;" # Tap: ;, Double-tap; (placeholder)
+    "TD(3)": "SCRN\nPSCR" # Tap: Screenshot-full macro, Hold: Print Screen
 
-    # Macros - descriptive symbols
-    "M0": "💤" # vigiland idle inhibitor toggle
-    "M1": "📷" # screenshot-region (satty + slurp)
-    "M2": "🖵" # screenshot-full (satty fullscreen)
+    # Macros - clear text labels (emoji render poorly in SVG)
+    "M0": "IDLE" # vigiland idle inhibitor toggle
+    "M1": "AREA" # screenshot-region (satty + slurp)
+    "M2": "FULL" # screenshot-full (satty fullscreen)
 
     # Screenshot keys
-    "KC_PSCREEN": "🖵" # Print Screen
-    "LSFT(KC_PSCREEN)": "⇧🖵" # Shift+Print Screen
+    "KC_PSCREEN": "PSCR" # Print Screen
+    "LSFT(KC_PSCREEN)": "⇧PSCR" # Shift+Print Screen
+
+    # RGB Lighting Controls
+    "RGB_TOG": "RGB" # RGB toggle on/off
+    "RGB_MOD": "MODE" # RGB mode/effect cycle
+    "RGB_HUI": "H+" # Hue increase
+    "RGB_HUD": "H-" # Hue decrease
+    "RGB_SAI": "S+" # Saturation increase
+    "RGB_SAD": "S-" # Saturation decrease
+    "RGB_VAI": "V+" # Value/brightness increase
+    "RGB_VAD": "V-" # Value/brightness decrease
+
+    # Navigation keys
+    "KC_HOME": "⇱" # Home (U+21F1)
+    "KC_END": "⇲" # End (U+21F2)
+    "KC_PGUP": "⇞" # Page Up (U+21DE)
+    "KC_PGDOWN": "⇟" # Page Down (U+21DF)
+
+    # System keys
+    "RESET": "⚠RST" # Keyboard reset/bootloader
+    "KC_ESCAPE": "Esc" # Escape
+    "KC_DELETE": "Del" # Delete
+    "KC_ESC": "Esc" # Escape alternate
+    "KC_DEL": "Del" # Delete alternate
 
 draw_config:
   # Visual styling for layout diagrams
