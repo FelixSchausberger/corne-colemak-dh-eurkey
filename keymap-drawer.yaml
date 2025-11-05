@@ -84,7 +84,8 @@ parse_config:
     "LSFT(LGUI(KC_O))": "➡" # U+27A1 - Move window right
 
     # Special character glyphs using widely-supported Unicode
-    "KC_BSPC": "⌫" # U+232B - Backspace (widely supported)
+    "KC_BSPC": "⌫" # U+232B - Backspace (QMK standard)
+    "KC_BSPACE": "⌫" # U+232B - Backspace (VIAL format)
     "KC_SPC": "␣" # U+2423 - Space symbol (widely supported)
     "KC_TAB": "↹" # U+21B9 - Standard tab symbol (better support than U+2B7E)
     "KC_SFTENT": "⏎" # U+23CE - Return symbol (widely supported)
