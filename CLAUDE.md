@@ -256,14 +256,15 @@ The CI automatically handles conversion when `.vil` files are pushed:
   run: |
     for vil_file in firmware/*.vil; do
       vil2json "$vil_file" -o "$json_file" -m 6  # Max 6 layers
-      keymap parse -q "$json_file" -o "$yaml_file"
+      # Apply config during parse to transform keycodes to symbols
+      keymap -c keymap-drawer.yaml parse -q "$json_file" -o "$yaml_file"
     done
 
 - name: Generate layout images with layer filtering and symbol translation
   run: |
     # Only draw first 6 layers (L0-L5) to skip empty layers
-    # Use custom config to display actual symbols instead of keycodes
-    keymap draw "$yaml_file" -c keymap-drawer.yaml -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
+    # Use custom config for styling and glyph mapping
+    keymap -c keymap-drawer.yaml draw "$yaml_file" -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
 
     # Convert to PDF for printing
     rsvg-convert -f pdf -o "$output_pdf" "$output_svg"
@@ -319,8 +320,8 @@ vil2json firmware/your-layout.vil \
 #### Step 2: Generate YAML for Keymap-Drawer
 
 ```bash
-# Parse QMK JSON to keymap-drawer YAML format
-keymap parse -q firmware/your-layout.json -o firmware/your-layout.yaml
+# Parse QMK JSON to keymap-drawer YAML format with config to transform keycodes to symbols
+keymap -c keymap-drawer.yaml parse -q firmware/your-layout.json -o firmware/your-layout.yaml
 ```
 
 Only commit `.vil` files - CI generates `.json`, `.yaml`, and images automatically.
@@ -329,8 +330,7 @@ Only commit `.vil` files - CI generates `.json`, `.yaml`, and images automatical
 
 ```bash
 # Generate SVG with only active layers (L0-L5) and symbol translation
-keymap draw firmware/your-layout.yaml \
-  -c keymap-drawer.yaml \
+keymap -c keymap-drawer.yaml draw firmware/your-layout.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/your-layout.svg
 
@@ -350,8 +350,11 @@ convert images/generated/your-layout.svg images/generated/your-layout.png
 
 **Symbol Translation:**
 
-- The `keymap-drawer.yaml` config maps QMK keycodes to readable symbols
-- Format after `keymap parse`: `LBRACKET` (not `KC_LBRACKET`), `Sft+1` (not `LSFT(KC_1)`)
+- The `keymap-drawer.yaml` config maps QMK keycodes to readable symbols using `raw_binding_map`
+- **Critical**: Apply config during BOTH `parse` and `draw` steps:
+  - `keymap -c keymap-drawer.yaml parse ...` - Transforms keycodes to symbols in YAML
+  - `keymap -c keymap-drawer.yaml draw ...` - Applies styling and glyph mappings in SVG
+- Format after `keymap parse`: `LBRACKET` (not `KC_LBRACKET`), `Sft+1` (not `LSFT(KC_1)`), `Gui+1` (not `GUI(KC_1)`), `AltGr+A` (not `RALT(KC_A)`)
 - Shows actual characters: `[`, `{`, `!`, `ä` instead of internal keycodes
 - Makes layouts much easier to read and understand
 
@@ -364,10 +367,9 @@ nix develop
 
 # Complete workflow with layer filtering and symbol translation
 vil2json firmware/corne_v4-1_custom_hrmods.vil -m 6 -f
-keymap parse -q firmware/corne_v4-1_custom_hrmods.json \
+keymap -c keymap-drawer.yaml parse -q firmware/corne_v4-1_custom_hrmods.json \
   -o firmware/corne_v4-1_custom_hrmods.yaml
-keymap draw firmware/corne_v4-1_custom_hrmods.yaml \
-  -c keymap-drawer.yaml \
+keymap -c keymap-drawer.yaml draw firmware/corne_v4-1_custom_hrmods.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/corne_v4-1_custom_hrmods.svg
 ```
@@ -381,10 +383,9 @@ nix develop
 
 # 2. (Optional) Local preview with layer filtering and symbol translation
 vil2json firmware/corne_v4-1_custom_hrmods.vil -m 6 -f
-keymap parse -q firmware/corne_v4-1_custom_hrmods.json \
+keymap -c keymap-drawer.yaml parse -q firmware/corne_v4-1_custom_hrmods.json \
   -o firmware/corne_v4-1_custom_hrmods.yaml
-keymap draw firmware/corne_v4-1_custom_hrmods.yaml \
-  -c keymap-drawer.yaml \
+keymap -c keymap-drawer.yaml draw firmware/corne_v4-1_custom_hrmods.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/corne_v4-1_custom_hrmods.svg
 
