@@ -87,8 +87,41 @@ parse_config:
     "KC_BSPC": "⌫" # U+232B - Backspace (QMK standard)
     "KC_BSPACE": "⌫" # U+232B - Backspace (VIAL format)
     "KC_SPC": "␣" # U+2423 - Space symbol (widely supported)
+    "KC_SPACE": "␣" # U+2423 - Space symbol alternate format
     "KC_TAB": "↹" # U+21B9 - Standard tab symbol (better support than U+2B7E)
-    "KC_SFTENT": "⏎" # U+23CE - Return symbol (widely supported)
+    "KC_ENTER": "⏎" # U+23CE - Return symbol
+    "KC_SFTENT": "⇧⏎" # Shift+Enter (shifted return)
+
+    # Mod-Tap keys (Home Row Mods) - show both tap/hold functions
+    # Left hand home row mods
+    "MT(MOD_LGUI,KC_A)": "A\n⌘" # Tap: A, Hold: GUI/Super
+    "MT(MOD_LALT,KC_R)": "R\n⌥" # Tap: R, Hold: Alt
+    "MT(MOD_LCTL,KC_S)": "S\n⌃" # Tap: S, Hold: Control
+    "MT(MOD_LSFT,KC_T)": "T\n⇧" # Tap: T, Hold: Shift
+    # Right hand home row mods
+    "MT(MOD_RSFT,KC_N)": "N\n⇧" # Tap: N, Hold: Shift
+    "MT(MOD_RCTL,KC_E)": "E\n⌃" # Tap: E, Hold: Control
+    "MT(MOD_RALT,KC_I)": "I\n⌥" # Tap: I, Hold: Alt
+    "MT(MOD_RGUI,KC_O)": "O\n⌘" # Tap: O, Hold: GUI/Super
+
+    # Special dual-function keys
+    "KC_LSPO": "(\n⇧" # Tap: (, Hold: Left Shift
+    "KC_RCPC": ")\n⌃" # Tap: ), Hold: Right Control
+
+    # Tap-Dance keys - show both tap/hold functions
+    "TD(0)": "Esc\n⌃" # Tap: Escape, Hold: Control
+    "TD(1)": "Del\n⇧" # Tap: Delete, Hold: Shift
+    "TD(2)": ";\n;" # Tap: ;, Double-tap: ; (placeholder)
+    "TD(3)": "🖵\n🖵" # Tap: Screenshot-full macro, Hold: Print Screen
+
+    # Macros - descriptive symbols
+    "M0": "💤" # vigiland idle inhibitor toggle
+    "M1": "📷" # screenshot-region (satty + slurp)
+    "M2": "🖵" # screenshot-full (satty fullscreen)
+
+    # Screenshot keys
+    "KC_PSCREEN": "🖵" # Print Screen
+    "LSFT(KC_PSCREEN)": "⇧🖵" # Shift+Print Screen
 
 draw_config:
   # Visual styling for layout diagrams

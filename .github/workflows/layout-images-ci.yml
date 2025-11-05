@@ -64,9 +64,9 @@ jobs:
                 json_file="firmware/${base_name}.json"
                 yaml_file="firmware/${base_name}.yaml"
 
-                # Convert .vil to JSON (max 6 layers to skip empty ones)
+                # Convert .vil to JSON (filter out completely empty layers)
                 echo "  📄 Converting: $vil_file"
-                if vil2json "$vil_file" -o "$json_file" -m 6; then
+                if vil2json "$vil_file" -o "$json_file" -f; then
                   # Parse JSON to YAML with config to apply raw_binding_map (keycode → symbol transformation)
                   echo "  📝 Generating: $yaml_file"
                   if keymap -c keymap-drawer.yaml parse -q "$json_file" -o "$yaml_file"; then
@@ -101,10 +101,10 @@ jobs:
                 output_png="images/generated/${base_name}.png"
 
                 echo "📸 Generating: $output_svg"
-                # Only draw first 6 layers (L0-L5) to skip empty layers
+                # Automatically draw all non-empty layers (filtered by vil2json -f)
                 # Use custom config to display actual symbols instead of keycodes
                 # NOTE: -c must come BEFORE the draw subcommand
-                if keymap -c keymap-drawer.yaml draw "$yaml_file" -s L0 L1 L2 L3 L4 L5 -o "$output_svg"; then
+                if keymap -c keymap-drawer.yaml draw "$yaml_file" -o "$output_svg"; then
                   echo "  ✅ SVG generated successfully"
 
                   # Convert SVG to PDF for printing
