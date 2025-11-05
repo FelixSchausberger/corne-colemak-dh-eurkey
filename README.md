@@ -251,34 +251,32 @@ The custom layout (`corne_v4-1_custom.vil`) includes:
 
 ### Layer Organization
 
-- **Layer 0**: Base Colemak-DH layout with ergonomic key placement
+- **Layer 0**: Base Colemak-DH layout with home row modifiers and ergonomic thumb keys
 - **Layer 1**: Numbers (1-6) and navigation arrows for efficient data entry
 - **Layer 2**: Programming symbols + EurKey characters (äöüß) for multilingual coding
-- **Layer 3**: Function keys (F1-F12) and RGB controls for system interaction
-- **Layer 4**: NixOS/Niri window management with Colemak-DH native navigation
-- **Layer 5**: System controls (vigiland idle inhibitor, satty-based screenshots)
+- **Layer 3**: Function keys (F1-F12), RGB controls, and system macros (IDLE, screenshots)
+- **Layers 4-14**: Empty (reserved for future expansion)
 
 ### Key Optimizations
 
-- **EurKey Integration**: Natural access to German characters via AltGr combinations
+- **Ergonomic Thumb Keys**: Ctrl on right thumb for comfortable two-hand Ctrl+C/V/Z operations
+- **EurKey Integration**: Natural access to German characters (äöüß) via home row mod-tap (hold I for AltGr)
 - **Programming Focus**: Optimized symbol placement for Nix/Rust/Python development
+- **Clear Visual Symbols**: IDLE, AREA, FULL, PSCR text labels instead of blurry emoji
 - **Consistent Navigation**: Uses `neio` pattern matching Helix editor bindings
-- **Window Management**: Native Super+1-6 workspace switching with directional window movement
-- **Modern Rust Tooling**: satty for screenshots, vigiland for idle management
-- **WM-Agnostic Design**: Unified keybindings work consistently across niri/hyprland/cosmic
-- **System Control Integration**: Single source of truth for volume, brightness, and system functions
+- **Modern Rust Tooling**: satty for screenshots with annotation, vigiland for idle management
+- **System Control Integration**: Single source of truth for volume, brightness, RGB, and system functions
+- **Minimal Layer Usage**: Only L0-L3 active, layers 4-14 empty for clean visualization
 
 ### Detailed Layer Analysis
 
-| Layer | Purpose                  | Key Features                                                    |
-| ----- | ------------------------ | --------------------------------------------------------------- |
-| 0     | **Base Colemak-DH**      | Original ergonomic layout (preserved)                           |
-| 1     | **Numbers + Nav**        | 1-6 numbers, arrow keys, volume/brightness controls             |
-| 2     | **Programming + EurKey** | äöüß, brackets, operators, Nix symbols                          |
-| 3     | **Function Keys**        | F1-F12, RGB controls, system functions                          |
-| 4     | **Window Management**    | Super+1-6 workspaces, neio navigation                           |
-| 5     | **System Controls**      | M0: vigiland toggle, M1: screenshot region, M2: screenshot full |
-| 6-15  | **Available**            | Empty layers for optional future expansion                      |
+| Layer | Purpose                  | Key Features                                                                      |
+| ----- | ------------------------ | --------------------------------------------------------------------------------- |
+| 0     | **Base Colemak-DH**      | Home row mods, ergonomic thumb keys (Alt left, Ctrl right)                       |
+| 1     | **Numbers + Nav**        | 1-6 numbers, arrow keys, volume/brightness controls                               |
+| 2     | **Programming + EurKey** | äöüß, brackets, operators, Nix symbols                                            |
+| 3     | **Function + System**    | F1-F12, RGB controls (RGB, MODE, H+/-, S+/-, V+/-), macros (IDLE, AREA, FULL)    |
+| 4-14  | **Reserved**             | Empty layers (all KC_TRNS) for future expansion                                   |
 
 #### Programming Layer Enhancement (Layer 2)
 
@@ -300,33 +298,24 @@ Programming Symbols Layout:
 
 #### EurKey Integration
 
-- **German Characters**: Added proper AltGr mappings
-  - `AltGr + A` → ä
-  - `AltGr + O` → ö
-  - `AltGr + U` → ü
-  - `AltGr + S` → ß
+- **German Characters**: Access via home row mod-tap (hold I for AltGr)
+  - `Hold I + A` → ä
+  - `Hold I + O` → ö
+  - `Hold I + U` → ü
+  - `Hold I + S` → ß
 - **Layout Compliance**: Maintains EurKey standard for European character access
-- **Ergonomic Access**: Right thumb AltGr key for comfortable German typing
+- **Ergonomic Access**: Home row mod-tap eliminates need for dedicated AltGr thumb key
 
-#### NixOS/Niri Window Management (Layer 4)
+#### System Controls (Layer 3)
 
-**Colemak-DH Native Navigation** with **neio** pattern:
+**Macros with Clear Text Labels**:
 
-```text
-Window Management Layer:
-Super+1  Super+2  Super+3  Super+4  Super+5  Super+6     [Workspace Switch]
-         n        e        i        o                     [Window Focus]
-         Shift+n  Shift+e  Shift+i  Shift+o               [Move Windows]
+- **M0 (IDLE)**: Toggle vigiland idle inhibitor - `pkill -x vigiland || vigiland &`
+- **M1 (AREA)**: Screenshot region with annotation - `wayshot + slurp + satty`
+- **M2 (FULL)**: Screenshot fullscreen with annotation - `wayshot + satty`
+- **PSCR**: Print Screen key for compatibility
 
-Shift+Super+6  Shift+Super+5  ...  Shift+Super+1        [Move to Workspace]
-```
-
-**Navigation Philosophy**:
-
-- **n/e/i/o** = left/down/up/right
-- Matches existing Hyprland `Super+neio` keybindings
-- Consistent muscle memory between editor and window manager
-- No context switching between hjkl and neio patterns
+**RGB Controls**: RGB (toggle), MODE, H+/-, S+/-, V+/- for per-key lighting customization
 
 ## Key Workflows
 
@@ -339,14 +328,16 @@ Shift+Super+6  Shift+Super+5  ...  Shift+Super+1        [Move to Workspace]
 
 ### German Typing Workflow (Layer 2)
 
-- `AltGr + aous`: Access äöüß characters
+- `Hold I + A/O/U/S`: Access äöüß characters via home row mod-tap
 - Maintains full EurKey compatibility
+- No dedicated AltGr key needed
 
-### Window Management Workflow (Layer 4)
+### System Control Workflow (Layer 3)
 
-- `Super + Layer + 1-6`: Switch workspace
-- `Super + Layer + neio`: Focus window direction
-- `Super + Shift + Layer + 1-6`: Move window to workspace
+- `Hold layer + M0`: Toggle idle inhibitor (IDLE)
+- `Hold layer + M1`: Screenshot region with annotation (AREA)
+- `Hold layer + M2`: Screenshot fullscreen with annotation (FULL)
+- `Hold layer + RGB controls`: Customize per-key lighting
 
 ## Hardware & Firmware
 

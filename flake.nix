@@ -20,7 +20,7 @@
     # The vial fork of qmk, stores the keyboard config in on-keyboard memory, and
     # supports the `Vial` GUI key map config app.
     vial-qmk = {
-      url = "git+https://github.com/vial-kb/vial-qmk.git?submodules=1&allRefs=1";
+      url = "github:vial-kb/vial-qmk/vial";
       flake = false;
     };
 
@@ -91,6 +91,7 @@
             # Additional utilities
             jq # JSON processing for layout files
             unstable.keymap-drawer # Layout visualization tool
+            librsvg # SVG to PDF conversion (rsvg-convert command)
 
             # Rust tool: VIAL to QMK JSON converter
             (pkgs.rustPlatform.buildRustPackage {
@@ -183,33 +184,6 @@
 
           # Additional environment variables
           NIX_SHELL_PRESERVE_PROMPT = "1";
-        };
-
-        # Package for the firmware (optional)
-        packages.firmware = pkgs.stdenv.mkDerivation {
-          name = "corne-v4-1-vial-firmware";
-          version = "1.0.0";
-
-          src = vial-qmk;
-
-          buildInputs = with pkgs; [
-            qmk
-            gcc-arm-embedded
-            python3
-            python3Packages.setuptools
-            gnumake
-          ];
-
-          buildPhase = ''
-            export QMK_HOME=$src
-            make BUILD_DIR=$out/build -j$(nproc) crkbd/rev4_1:vial
-          '';
-
-          installPhase = ''
-            mkdir -p $out/firmware
-            cp build/*.uf2 $out/firmware/ 2>/dev/null || echo "No UF2 files generated"
-            cp build/*.hex $out/firmware/ 2>/dev/null || echo "No HEX files generated"
-          '';
         };
 
         # Formatter for the flake
