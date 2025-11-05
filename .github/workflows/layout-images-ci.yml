@@ -1,14 +1,17 @@
 name: Layout Images CI/CD
+# This workflow automatically converts VIAL layouts to visualizations
 on:
   push:
     branches: [main]
     paths:
       - "firmware/*.vil"
+      - "keymap-drawer.yaml"
       - ".github/workflows/layout-images-ci.yml"
   pull_request:
     branches: [main]
     paths:
       - "firmware/*.vil"
+      - "keymap-drawer.yaml"
       - ".github/workflows/layout-images-ci.yml"
   workflow_dispatch:
 permissions:
