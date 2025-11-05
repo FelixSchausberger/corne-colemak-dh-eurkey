@@ -270,13 +270,13 @@ The custom layout (`corne_v4-1_custom.vil`) includes:
 
 ### Detailed Layer Analysis
 
-| Layer | Purpose                  | Key Features                                                                      |
-| ----- | ------------------------ | --------------------------------------------------------------------------------- |
-| 0     | **Base Colemak-DH**      | Home row mods, ergonomic thumb keys (Alt left, Ctrl right)                       |
-| 1     | **Numbers + Nav**        | 1-6 numbers, arrow keys, volume/brightness controls                               |
-| 2     | **Programming + EurKey** | äöüß, brackets, operators, Nix symbols                                            |
-| 3     | **Function + System**    | F1-F12, RGB controls (RGB, MODE, H+/-, S+/-, V+/-), macros (IDLE, AREA, FULL)    |
-| 4-14  | **Reserved**             | Empty layers (all KC_TRNS) for future expansion                                   |
+| Layer | Purpose                  | Key Features                                                                  |
+| ----- | ------------------------ | ----------------------------------------------------------------------------- |
+| 0     | **Base Colemak-DH**      | Home row mods, ergonomic thumb keys (Alt left, Ctrl right)                    |
+| 1     | **Numbers + Nav**        | 1-6 numbers, arrow keys, volume/brightness controls                           |
+| 2     | **Programming + EurKey** | äöüß, brackets, operators, Nix symbols                                        |
+| 3     | **Function + System**    | F1-F12, RGB controls (RGB, MODE, H+/-, S+/-, V+/-), macros (IDLE, AREA, FULL) |
+| 4-14  | **Reserved**             | Empty layers (all KC_TRNS) for future expansion                               |
 
 #### Programming Layer Enhancement (Layer 2)
 
@@ -568,14 +568,12 @@ This project builds upon excellent work from the keyboard community:
 ## Key Features
 
 - **Home Row Modifiers**: Enhanced ergonomic layout with mod-tap functionality
-
   - Available in `corne_v4-1_custom_hrmods.vil`
   - Tap for letters, hold for modifiers (GUI/Alt/Ctrl/Shift)
   - Significantly reduces finger travel and improves ergonomics
   - A(GUI), R(Alt), S(Ctrl), T(Shift) | N(Shift), E(Ctrl), I(Alt), O(GUI)
 
 - **Modern Tool Integration**: Rust-based tools for efficient workflows
-
   - wayshot + slurp for fast Wayland screenshots
   - satty for screenshot annotation
   - vigiland for simple idle management
