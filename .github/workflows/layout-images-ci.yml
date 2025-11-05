@@ -1,4 +1,5 @@
 name: Layout Images CI/CD
+# This workflow automatically converts VIAL layouts to visualizations
 on:
   push:
     branches: [main]
