@@ -53,33 +53,33 @@ parse_config:
     "Sft+COMMA": "<"
     "Sft+DOT": ">"
 
-    # EurKey characters (RALT format from keymap parse)
-    "RALT(A)": "ä"
-    "RALT(O)": "ö"
-    "RALT(U)": "ü"
-    "RALT(S)": "ß"
+    # EurKey characters (AltGr format from keymap parse)
+    "AltGr+A": "ä"
+    "AltGr+O": "ö"
+    "AltGr+U": "ü"
+    "AltGr+S": "ß"
 
-    # GUI/Super key combinations for window management
-    "GUI(1)": "󰎤" # Super+1 workspace
-    "GUI(2)": "󰎧" # Super+2 workspace
-    "GUI(3)": "󰎪" # Super+3 workspace
-    "GUI(4)": "󰎭" # Super+4 workspace
-    "GUI(5)": "󰎱" # Super+5 workspace
-    "GUI(6)": "󰎹" # Super+6 workspace
-    "GUI(N)": "N" # Super+N navigation
-    "GUI(E)": "E" # Super+E navigation
-    "GUI(I)": "I" # Super+I navigation
-    "GUI(O)": "O" # Super+O navigation
-    "Sft+GUI(1)": "󰎤" # Shift+Super+1
-    "Sft+GUI(2)": "󰎧" # Shift+Super+2
-    "Sft+GUI(3)": "󰎪" # Shift+Super+3
-    "Sft+GUI(4)": "󰎭" # Shift+Super+4
-    "Sft+GUI(5)": "󰎱" # Shift+Super+5
-    "Sft+GUI(6)": "󰎹" # Shift+Super+6
-    "Sft+GUI(N)": "N" # Shift+Super+N
-    "Sft+GUI(E)": "E" # Shift+Super+E
-    "Sft+GUI(I)": "I" # Shift+Super+I
-    "Sft+GUI(O)": "O" # Shift+Super+O
+    # GUI/Super key combinations for window management (Gui+ format from keymap parse)
+    "Gui+1": "󰎤" # Super+1 workspace
+    "Gui+2": "󰎧" # Super+2 workspace
+    "Gui+3": "󰎪" # Super+3 workspace
+    "Gui+4": "󰎭" # Super+4 workspace
+    "Gui+5": "󰎱" # Super+5 workspace
+    "Gui+6": "󰎹" # Super+6 workspace
+    "Gui+N": "N" # Super+N navigation
+    "Gui+E": "E" # Super+E navigation
+    "Gui+I": "I" # Super+I navigation
+    "Gui+O": "O" # Super+O navigation
+    "Sft+Gui+1": "󰎤" # Shift+Super+1
+    "Sft+Gui+2": "󰎧" # Shift+Super+2
+    "Sft+Gui+3": "󰎪" # Shift+Super+3
+    "Sft+Gui+4": "󰎭" # Shift+Super+4
+    "Sft+Gui+5": "󰎱" # Shift+Super+5
+    "Sft+Gui+6": "󰎹" # Shift+Super+6
+    "Sft+Gui+N": "N" # Shift+Super+N
+    "Sft+Gui+E": "E" # Shift+Super+E
+    "Sft+Gui+I": "I" # Shift+Super+I
+    "Sft+Gui+O": "O" # Shift+Super+O
 
 draw_config:
   # Use shorter, more readable labels

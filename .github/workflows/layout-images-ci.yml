@@ -64,9 +64,9 @@ jobs:
                 # Convert .vil to JSON (max 6 layers to skip empty ones)
                 echo "  📄 Converting: $vil_file"
                 if vil2json "$vil_file" -o "$json_file" -m 6; then
-                  # Parse JSON to YAML
+                  # Parse JSON to YAML with config to apply raw_binding_map (keycode → symbol transformation)
                   echo "  📝 Generating: $yaml_file"
-                  if keymap parse -q "$json_file" -o "$yaml_file"; then
+                  if keymap -c keymap-drawer.yaml parse -q "$json_file" -o "$yaml_file"; then
                     echo "  ✅ Success: $base_name"
                   else
                     echo "  ⚠️ Warning: Failed to parse $json_file to YAML"
