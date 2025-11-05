@@ -60,33 +60,34 @@ parse_config:
     "RALT(KC_U)": "ü"
     "RALT(KC_S)": "ß"
 
-    # GUI/Super key combinations for window management
-    "LGUI(KC_1)": "󰎤"
-    "LGUI(KC_2)": "󰎧"
-    "LGUI(KC_3)": "󰎪"
-    "LGUI(KC_4)": "󰎭"
-    "LGUI(KC_5)": "󰎱"
-    "LGUI(KC_6)": "󰎹"
-    "LGUI(KC_N)": "N"
-    "LGUI(KC_E)": "E"
-    "LGUI(KC_I)": "I"
-    "LGUI(KC_O)": "O"
-    "LSFT(LGUI(KC_1))": "󰎤"
-    "LSFT(LGUI(KC_2))": "󰎧"
-    "LSFT(LGUI(KC_3))": "󰎪"
-    "LSFT(LGUI(KC_4))": "󰎭"
-    "LSFT(LGUI(KC_5))": "󰎱"
-    "LSFT(LGUI(KC_6))": "󰎹"
-    "LSFT(LGUI(KC_N))": "N"
-    "LSFT(LGUI(KC_E))": "E"
-    "LSFT(LGUI(KC_I))": "I"
-    "LSFT(LGUI(KC_O))": "O"
+    # GUI/Super key combinations - use standard Unicode instead of Nerd Fonts
+    # Nerd Font icons (󰎤) require special fonts and show as hex codes otherwise
+    "LGUI(KC_1)": "❶"   # U+2776 - Circled digit: Switch to workspace 1
+    "LGUI(KC_2)": "❷"   # U+2777 - Circled digit: Switch to workspace 2
+    "LGUI(KC_3)": "❸"   # U+2778 - Circled digit: Switch to workspace 3
+    "LGUI(KC_4)": "❹"   # U+2779 - Circled digit: Switch to workspace 4
+    "LGUI(KC_5)": "❺"   # U+277A - Circled digit: Switch to workspace 5
+    "LGUI(KC_6)": "❻"   # U+277B - Circled digit: Switch to workspace 6
+    "LGUI(KC_N)": "◀"   # U+25C0 - Focus left window
+    "LGUI(KC_E)": "▼"   # U+25BC - Focus down window
+    "LGUI(KC_I)": "▲"   # U+25B2 - Focus up window
+    "LGUI(KC_O)": "▶"   # U+25B6 - Focus right window
+    "LSFT(LGUI(KC_1))": "➊" # U+278A - Move window to workspace 1
+    "LSFT(LGUI(KC_2))": "➋" # U+278B - Move window to workspace 2
+    "LSFT(LGUI(KC_3))": "➌" # U+278C - Move window to workspace 3
+    "LSFT(LGUI(KC_4))": "➍" # U+278D - Move window to workspace 4
+    "LSFT(LGUI(KC_5))": "➎" # U+278E - Move window to workspace 5
+    "LSFT(LGUI(KC_6))": "➏" # U+278F - Move window to workspace 6
+    "LSFT(LGUI(KC_N))": "⬅" # U+2B05 - Move window left
+    "LSFT(LGUI(KC_E))": "⬇" # U+2B07 - Move window down
+    "LSFT(LGUI(KC_I))": "⬆" # U+2B06 - Move window up
+    "LSFT(LGUI(KC_O))": "➡" # U+27A1 - Move window right
 
-    # Special character glyphs for better visualization
-    "KC_BSPC": "⌫"
-    "KC_SPC": "␣"
-    "KC_TAB": "⭾"
-    "KC_SFTENT": "⏎"
+    # Special character glyphs using widely-supported Unicode
+    "KC_BSPC": "⌫"      # U+232B - Backspace (widely supported)
+    "KC_SPC": "␣"       # U+2423 - Space symbol (widely supported)
+    "KC_TAB": "↹"       # U+21B9 - Standard tab symbol (better support than U+2B7E)
+    "KC_SFTENT": "⏎"    # U+23CE - Return symbol (widely supported)
 
 draw_config:
   # Visual styling for layout diagrams
