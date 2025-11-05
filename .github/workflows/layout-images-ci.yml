@@ -4,11 +4,13 @@ on:
     branches: [main]
     paths:
       - "firmware/*.vil"
+      - "keymap-drawer.yaml"
       - ".github/workflows/layout-images-ci.yml"
   pull_request:
     branches: [main]
     paths:
       - "firmware/*.vil"
+      - "keymap-drawer.yaml"
       - ".github/workflows/layout-images-ci.yml"
   workflow_dispatch:
 permissions:
