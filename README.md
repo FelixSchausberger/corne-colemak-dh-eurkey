@@ -83,27 +83,24 @@ vial             # Open VIAL GUI for layout configuration
 
 ### Jujutsu (jj) Version Control
 
-This repository uses Jujutsu (jj) for version control with a **dev-main branching strategy**:
+This repository uses Jujutsu (jj) for version control with a **single main branch workflow**:
 
 **Branch Strategy:**
 
-- **dev** - Daily development branch (default working branch)
-- **main** - Stable, always-green branch (production-ready)
-- PRs flow from dev → main when ready for release
+- **main** - Single branch for all development and stable releases
+- All work is committed directly to main
+- CI ensures quality through automated validation
 
 **Daily Workflow:**
 
 ```bash
-# Work on dev branch (default)
-# Make changes to layout files...
-
-# Commit with conventional commits format
+# Work directly on main branch
 jj describe -m "feat: add new macro for screenshot workflow"
 
 # Or use AI-powered commit message (if lumen is available)
 jjdescribe
 
-# Push changes to remote
+# Push changes to remote main branch
 jj git push
 ```
 
