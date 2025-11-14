@@ -94,20 +94,30 @@ feat(ci): optimize cachix push filter
 │   ├── corne_v4-1_custom_hrmods.vil    # Enhanced layout with home row modifiers
 │   └── corne_nwwy.vil                  # Original base layout (from nwwy)
 ├── images/                             # Keyboard layout visualizations
+│   ├── generated/                      # Auto-generated SVG/PDF images (DO NOT edit manually)
 │   └── nwwy/                           # Original layout images (from nwwy)
 ├── scripts/                            # Testing and validation tools
 │   ├── validate-vial.sh                # VIAL layout validation
 │   ├── test-all.sh                     # Main test runner
 │   ├── test-configs.sh                 # Nix configuration validation
 │   └── act-check.sh                    # Local GitHub Actions runner
+├── tools/                              # Custom development tools
+│   └── vil2json/                       # Rust tool for VIAL to QMK JSON conversion
 ├── .github/workflows/                  # CI/CD automation
 │   ├── firmware-ci.yml                 # Firmware validation and building
 │   └── layout-images-ci.yml            # Automatic layout image generation
+├── keymap-drawer.yaml                  # Symbol translation config for keymap-drawer
 ├── flake.nix                           # Nix development environment
 ├── README.md                           # Main project documentation (includes testing guide)
 ├── CLAUDE.md                           # This file - Claude Code guidance
 └── LICENSE                             # MIT License
 ```
+
+**Important Notes:**
+
+- **Generated files** (`.json`, `.yaml`, `images/generated/`) are automatically created by CI
+- **Never commit** manually created `.json` or `.yaml` files - only commit `.vil` files
+- The `images/generated/` directory contains auto-generated images that update with each `.vil` change
 
 ## Key File Types & Purposes
 
@@ -137,11 +147,24 @@ The `corne_v4-1_custom_hrmods.vil` layout includes mod-tap functionality:
 - **Benefits**: Significantly reduced finger travel and improved ergonomics
 - **Adaptation**: Requires 1-2 weeks of practice to build muscle memory
 
-### Layout Images (.png)
+### Layout Images (.svg/.pdf/.png)
 
 - **Purpose**: Visual representations of different keyboard layers
-- **Organization**: Stored in `images/nwwy/` with descriptive naming
+- **Organization**:
+  - `images/generated/` - Auto-generated images from CI (SVG and PDF formats)
+  - `images/nwwy/` - Original community-contributed layout images
 - **Usage**: Reference images for understanding the layout design and documentation
+- **Note**: Generated images are automatically updated when `.vil` files change
+
+### Keymap-Drawer Configuration (keymap-drawer.yaml)
+
+- **Purpose**: Symbol translation configuration for keymap-drawer visualization tool
+- **Key Features**:
+  - Maps QMK keycodes to readable symbols (e.g., `LSFT(KC_1)` → `!`)
+  - Defines keyboard layout (crkbd/rev4_1/standard, LAYOUT_split_3x6_3_ex2)
+  - Configures visual styling for generated SVG images
+- **Usage**: Automatically used by CI; manually applied with `-c keymap-drawer.yaml` flag
+- **Critical**: Must be applied during BOTH `parse` and `draw` steps for full symbol translation
 
 ## Development Environment
 
@@ -158,8 +181,8 @@ The repository includes a complete Nix flake (`flake.nix`) that provides:
 
 **Available Tools**:
 
-- `keymap` - Layout visualization (from nixpkgs)
-- `vial-to-keymap-drawer` - VIAL to YAML conversion (web version available)
+- `vil2json` - Custom Rust tool for VIAL to QMK JSON conversion
+- `keymap` - Layout visualization (keymap-drawer CLI)
 - `qmk` - QMK firmware build tools
 - `vial` - VIAL configuration GUI
 - `wayshot` - Modern Wayland screenshot tool (Rust)

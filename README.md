@@ -83,27 +83,24 @@ vial             # Open VIAL GUI for layout configuration
 
 ### Jujutsu (jj) Version Control
 
-This repository uses Jujutsu (jj) for version control with a **dev-main branching strategy**:
+This repository uses Jujutsu (jj) for version control with a **single main branch workflow**:
 
 **Branch Strategy:**
 
-- **dev** - Daily development branch (default working branch)
-- **main** - Stable, always-green branch (production-ready)
-- PRs flow from dev → main when ready for release
+- **main**: Single branch for all development and stable releases
+- All work is committed directly to main
+- CI ensures quality through automated validation
 
 **Daily Workflow:**
 
 ```bash
-# Work on dev branch (default)
-# Make changes to layout files...
-
-# Commit with conventional commits format
+# Work directly on main branch
 jj describe -m "feat: add new macro for screenshot workflow"
 
 # Or use AI-powered commit message (if lumen is available)
 jjdescribe
 
-# Push changes to remote
+# Push changes to remote main branch
 jj git push
 ```
 
@@ -114,26 +111,20 @@ For experimental features that need isolation:
 ```bash
 # Create feature branch with interactive prompts
 jjbranch  # or jjb
+# Interactive prompts:
+# 1. Select type: feat, fix, chore, docs, test, refactor, perf
+# 2. Enter description (lowercase, hyphens only)
+# Result: Creates branch from current revision, commits with conventional format
 
-# Work on your feature...
-jj describe -m "feat(experimental): test new layer design"
-
-# Push and create PR back to dev
+# When ready, use jjpush to create PR back to main
 jjpush
 ```
 
-**Merging to Main:**
-
-When dev branch is stable and tested:
-
-1. Create PR from dev → main via GitHub UI
-2. Wait for CI checks to pass
-3. Merge when ready for production release
-
 **Key Points:**
 
-- Daily work happens on `dev` branch
-- `main` only receives tested, stable changes
+- All work happens on `main` by default (single developer workflow)
+- Feature branches (via `jjbranch`) are optional for experimental work
+- Branch names follow: `type/description` (e.g., `feat/add-auto-merge`)
 - Commit messages follow conventional commits: `type: description`
 - Types: feat, fix, docs, style, refactor, perf, test, chore
 - Validation enforced via prek hooks
@@ -188,11 +179,11 @@ vil2json firmware/your-layout.vil -o firmware/your-layout.json
 # Optional: Limit to first 6 layers and filter empty ones
 vil2json firmware/your-layout.vil -o firmware/your-layout.json -m 6 -f
 
-# Generate YAML from JSON
-keymap parse -q firmware/your-layout.json -o firmware/your-layout.yaml
+# Generate YAML from JSON with symbol translation
+keymap -c keymap-drawer.yaml parse -q firmware/your-layout.json -o firmware/your-layout.yaml
 
-# Generate SVG with layer filtering (only L0-L5)
-keymap draw firmware/your-layout.yaml -s L0 L1 L2 L3 L4 L5 \
+# Generate SVG with layer filtering (only L0-L5) and symbol translation
+keymap -c keymap-drawer.yaml draw firmware/your-layout.yaml -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/your-layout.svg
 
 # Optional: Convert to PNG
@@ -221,6 +212,14 @@ convert images/generated/your-layout.svg images/generated/your-layout.png
 - Filtering reduces SVG size by ~60% (137KB → 55KB)
 - Improves README load times and readability
 
+**Symbol Translation:**
+
+- The `keymap-drawer.yaml` config maps QMK keycodes to readable symbols
+- **Critical**: Apply config with `-c keymap-drawer.yaml` flag during BOTH `parse` and `draw` steps
+- Transforms technical keycodes like `LSFT(KC_1)` to readable symbols `!`
+- Shows actual characters: `[`, `{`, `!`, `ä` instead of `LBRACKET`, `Sft+1`, `AltGr+A`
+- Makes layout visualizations much easier to understand
+
 ### Complete Example
 
 ```bash
@@ -231,12 +230,12 @@ nix develop
 # 2. Convert to JSON (6 layers max, filter empty)
 vil2json firmware/corne_v4-1_custom_hrmods.vil -m 6 -f
 
-# 3. Generate YAML
-keymap parse -q firmware/corne_v4-1_custom_hrmods.json \
+# 3. Generate YAML with symbol translation
+keymap -c keymap-drawer.yaml parse -q firmware/corne_v4-1_custom_hrmods.json \
   -o firmware/corne_v4-1_custom_hrmods.yaml
 
-# 4. (Optional) Preview locally with layer filtering
-keymap draw firmware/corne_v4-1_custom_hrmods.yaml \
+# 4. (Optional) Preview locally with layer filtering and symbol translation
+keymap -c keymap-drawer.yaml draw firmware/corne_v4-1_custom_hrmods.yaml \
   -s L0 L1 L2 L3 L4 L5 \
   -o images/generated/corne_v4-1_custom_hrmods.svg
 

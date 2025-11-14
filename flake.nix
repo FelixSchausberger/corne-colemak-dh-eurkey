@@ -19,8 +19,9 @@
 
     # The vial fork of qmk, stores the keyboard config in on-keyboard memory, and
     # supports the `Vial` GUI key map config app.
+    # Using git+https to enable submodule fetching (required for ChibiOS)
     vial-qmk = {
-      url = "github:vial-kb/vial-qmk/vial";
+      url = "git+https://github.com/vial-kb/vial-qmk?ref=vial&submodules=1";
       flake = false;
     };
 
@@ -58,7 +59,7 @@
         # Development shell for building firmware
         devShells.default = pkgs.mkShell {
           # Corne V4.1 specific configuration
-          KEYBOARD = "crkbd/rev4_1"; # ✅ Correct for Corne V4.1
+          KEYBOARD = "crkbd/rev4_1/standard"; # ✅ Correct for Corne V4.1 (46 keys)
           KEYMAP = "vial";
 
           # Enhanced build configuration
@@ -191,7 +192,7 @@
             echo ""
 
             # Verify keyboard configuration exists
-            if [ -d "${vial-qmk}/keyboards/crkbd/rev4_1" ]; then
+            if [ -d "${vial-qmk}/keyboards/crkbd/rev4_1/standard" ]; then
               echo "✅ Corne V4.1 keyboard configuration found"
             else
               echo "❌ Corne V4.1 keyboard configuration NOT found"

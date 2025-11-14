@@ -20,11 +20,11 @@
     },
     "nixos-unstable": {
       "locked": {
-        "lastModified": 1762844143,
-        "narHash": "sha256-SlybxLZ1/e4T2lb1czEtWVzDCVSTvk9WLwGhmxFmBxI=",
+        "lastModified": 1762977756,
+        "narHash": "sha256-4PqRErxfe+2toFJFgcRKZ0UI9NSIOJa+7RXVtBhy4KE=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "9da7f1cf7f8a6e2a7cb3001b048546c92a8258b4",
+        "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
         "type": "github"
       },
       "original": {
@@ -77,17 +77,19 @@
       "flake": false,
       "locked": {
         "lastModified": 1762586723,
-        "narHash": "sha256-5gLVIJkHzckWOjCUSlq6YId1GVNctiYp563gZYW1j/Y=",
-        "owner": "vial-kb",
-        "repo": "vial-qmk",
+        "narHash": "sha256-peDTP92jWGQygau2YRj5Ha/iyhzfNzBygsHOguyZoic=",
+        "ref": "vial",
         "rev": "63fd8a414cf6c5fcf0e30a550ae362b467014153",
-        "type": "github"
+        "revCount": 29775,
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/vial-kb/vial-qmk"
       },
       "original": {
-        "owner": "vial-kb",
         "ref": "vial",
-        "repo": "vial-qmk",
-        "type": "github"
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/vial-kb/vial-qmk"
       }
     }
   },
