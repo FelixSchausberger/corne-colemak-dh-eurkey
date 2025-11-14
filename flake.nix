@@ -20,7 +20,7 @@
     # The vial fork of qmk, stores the keyboard config in on-keyboard memory, and
     # supports the `Vial` GUI key map config app.
     vial-qmk = {
-      url = "git+https://github.com/vial-kb/vial-qmk.git?submodules=1&allRefs=1";
+      url = "github:vial-kb/vial-qmk/vial";
       flake = false;
     };
 
@@ -53,6 +53,7 @@
             })
           ];
         };
+        lib = pkgs.lib;
       in {
         # Development shell for building firmware
         devShells.default = pkgs.mkShell {
@@ -63,8 +64,16 @@
           # Enhanced build configuration
           VIAL_QMK_DIR = "${vial-qmk}";
 
+          # SSL certificate configuration (required for prek and git operations)
+          SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          NIX_SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          GIT_SSL_CAINFO = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+
           # Build inputs with additional tools
+          # Split into CI-required (always) and dev-only (local development)
           buildInputs = with pkgs; [
+            # Core firmware build tools (needed in CI)
+            cacert # SSL certificates for git operations
             qmk
             unstable.vial
             dfu-util # For flashing via DFU
@@ -88,22 +97,22 @@
             which # Build dependency
             gnumake # Build system
 
-            # Additional utilities
+            # Additional utilities (needed in CI for layout generation)
             jq # JSON processing for layout files
             unstable.keymap-drawer # Layout visualization tool
+            librsvg # SVG to PDF conversion (rsvg-convert command)
 
-            # Rust tool: VIAL to QMK JSON converter
+            # Rust tool: VIAL to QMK JSON converter (needed in CI)
             (pkgs.rustPlatform.buildRustPackage {
               pname = "vil2json";
               version = "0.1.0";
               src = ./tools/vil2json;
               cargoLock.lockFile = ./tools/vil2json/Cargo.lock;
             })
-
-            # Formatting and validation tools
-            # prek is included for local development (from unstable)
-            # GitHub Actions CI uses j178/prek-action instead
-            unstable.prek # Pre-commit hook manager (meta-tool)
+          ] ++ lib.optionals (builtins.getEnv "CI" != "true") [
+            # Development-only tools (NOT in CI - saves ~5-8GB disk space)
+            # GitHub Actions CI uses j178/prek-action instead of nix prek
+            unstable.prek # Pre-commit hook manager (meta-tool, Rust-based, heavy build)
             alejandra # Nix formatter (prek)
             deadnix # Remove unused Nix code (prek)
             statix # Nix linter (prek)
@@ -119,6 +128,15 @@
 
           # Alias commands for building and flashing
           shellHook = ''
+            # SSL certificates for git/curl operations (required for prek)
+            export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+            export NIX_SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+            export GIT_SSL_CAINFO="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+            export CURL_CA_BUNDLE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+
+            # Unset any conflicting git config (let environment variables take precedence)
+            git config --global --unset http.sslCAInfo 2>/dev/null || true
+
             # Ensure QMK is properly configured
             export QMK_HOME="${vial-qmk}"
 
@@ -183,33 +201,6 @@
 
           # Additional environment variables
           NIX_SHELL_PRESERVE_PROMPT = "1";
-        };
-
-        # Package for the firmware (optional)
-        packages.firmware = pkgs.stdenv.mkDerivation {
-          name = "corne-v4-1-vial-firmware";
-          version = "1.0.0";
-
-          src = vial-qmk;
-
-          buildInputs = with pkgs; [
-            qmk
-            gcc-arm-embedded
-            python3
-            python3Packages.setuptools
-            gnumake
-          ];
-
-          buildPhase = ''
-            export QMK_HOME=$src
-            make BUILD_DIR=$out/build -j$(nproc) crkbd/rev4_1:vial
-          '';
-
-          installPhase = ''
-            mkdir -p $out/firmware
-            cp build/*.uf2 $out/firmware/ 2>/dev/null || echo "No UF2 files generated"
-            cp build/*.hex $out/firmware/ 2>/dev/null || echo "No HEX files generated"
-          '';
         };
 
         # Formatter for the flake

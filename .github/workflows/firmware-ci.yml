@@ -1,13 +1,13 @@
 name: Corne Firmware CI/CD
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "firmware/**"
       - "flake.nix"
       - ".github/workflows/firmware-ci.yml"
   pull_request:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "firmware/**"
       - "flake.nix"
@@ -19,6 +19,7 @@ permissions:
   contents: read
   pull-requests: write
 env:
+  CI: "true" # Exclude dev-only packages from nix shell (saves ~5-8GB disk space)
   NIX_CONFIG: |
     experimental-features = nix-command flakes
     allow-import-from-derivation = true

@@ -1,20 +1,24 @@
 name: Layout Images CI/CD
+# This workflow automatically converts VIAL layouts to visualizations
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "firmware/*.vil"
+      - "keymap-drawer.yaml"
       - ".github/workflows/layout-images-ci.yml"
   pull_request:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "firmware/*.vil"
+      - "keymap-drawer.yaml"
       - ".github/workflows/layout-images-ci.yml"
   workflow_dispatch:
 permissions:
   contents: write
   pull-requests: write
 env:
+  CI: "true" # Exclude dev-only packages from nix shell (saves ~5-8GB disk space)
   NIX_CONFIG: |
     experimental-features = nix-command flakes pipe-operators
     allow-import-from-derivation = true
@@ -22,25 +26,9 @@ env:
     extra-substituters = https://cache.nixos.org https://nix-community.cachix.org
     extra-trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
 jobs:
-  validate:
-    name: Validate Source Files
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Install Nix
-        uses: cachix/install-nix-action@v26
-        with:
-          extra_nix_config: ${{ env.NIX_CONFIG }}
-      - name: Run prek validation in nix develop shell
-        run: |
-          echo "=== Running prek validation ==="
-          nix develop --command prek run --all-files
-          echo "✅ All validation checks passed"
   generate-images:
     name: Generate Layout Images
     runs-on: ubuntu-latest
-    needs: validate
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -61,13 +49,19 @@ jobs:
                 json_file="firmware/${base_name}.json"
                 yaml_file="firmware/${base_name}.yaml"
 
-                # Convert .vil to JSON (max 6 layers to skip empty ones)
+                # Convert .vil to JSON (filter out completely empty layers)
                 echo "  📄 Converting: $vil_file"
-                vil2json "$vil_file" -o "$json_file" -m 6
-
-                # Parse JSON to YAML
-                echo "  📝 Generating: $yaml_file"
-                keymap parse -q "$json_file" -o "$yaml_file"
+                if vil2json "$vil_file" -o "$json_file" -f; then
+                  # Parse JSON to YAML with config to apply raw_binding_map (keycode → symbol transformation)
+                  echo "  📝 Generating: $yaml_file"
+                  if keymap -c keymap-drawer.yaml parse -q "$json_file" -o "$yaml_file"; then
+                    echo "  ✅ Success: $base_name"
+                  else
+                    echo "  ⚠️ Warning: Failed to parse $json_file to YAML"
+                  fi
+                else
+                  echo "  ⚠️ Warning: Failed to convert $vil_file to JSON"
+                fi
               fi
             done
 
@@ -88,24 +82,41 @@ jobs:
               if [ -f "$yaml_file" ]; then
                 base_name=$(basename "$yaml_file" .yaml)
                 output_svg="images/generated/${base_name}.svg"
+                output_pdf="images/generated/${base_name}.pdf"
                 output_png="images/generated/${base_name}.png"
 
                 echo "📸 Generating: $output_svg"
-                # Only draw first 6 layers (L0-L5) to skip empty layers
-                keymap draw "$yaml_file" -s L0 L1 L2 L3 L4 L5 -o "$output_svg"
+                # Automatically draw all non-empty layers (filtered by vil2json -f)
+                # Use custom config to display actual symbols instead of keycodes
+                # NOTE: -c must come BEFORE the draw subcommand
+                if keymap -c keymap-drawer.yaml draw "$yaml_file" -o "$output_svg"; then
+                  echo "  ✅ SVG generated successfully"
 
-                # Convert SVG to PNG using ImageMagick (if available)
-                if command -v convert >/dev/null 2>&1; then
-                  echo "🖼️ Converting to PNG: $output_png"
-                  convert "$output_svg" "$output_png"
+                  # Convert SVG to PDF for printing
+                  if command -v rsvg-convert >/dev/null 2>&1; then
+                    echo "  📄 Converting to PDF: $output_pdf"
+                    rsvg-convert -f pdf -o "$output_pdf" "$output_svg"
+                    echo "  ✅ PDF generated successfully"
+                  else
+                    echo "  ℹ️ rsvg-convert not available, skipping PDF conversion"
+                  fi
+
+                  # Convert SVG to PNG using ImageMagick (if available)
+                  if command -v convert >/dev/null 2>&1; then
+                    echo "  🖼️ Converting to PNG: $output_png"
+                    convert "$output_svg" "$output_png"
+                    echo "  ✅ PNG generated successfully"
+                  else
+                    echo "  ℹ️ ImageMagick not available, skipping PNG conversion"
+                  fi
                 else
-                  echo "ℹ️ ImageMagick not available, skipping PNG conversion"
+                  echo "  ⚠️ Warning: Failed to generate image for $yaml_file"
                 fi
               fi
             done
 
             echo '✅ Image generation complete'
-            ls -la images/generated/ || echo 'No images generated'
+            ls -lh images/generated/ || echo 'No images generated'
           SCRIPT
       - name: Commit generated images
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -126,6 +137,7 @@ jobs:
           🎨 Auto-update layout images from VIAL files
 
           🤖 Auto-converted via vil2json + keymap-drawer in GitHub Actions
+          📄 Generated formats: SVG (web), PDF (printing), PNG (preview)
           EOF
           )"
             git push
@@ -148,6 +160,7 @@ jobs:
 
             **Status:** ✅ Successfully generated layout images
             **Commit:** ${context.sha.substring(0, 7)}
+            **Formats:** SVG (web), PDF (printing), PNG (preview)
 
             ### Generated Images:`;
 
@@ -172,12 +185,14 @@ jobs:
             comment += `
 
             ### Workflow:
-            1. **VIAL files (.vil)** → **Auto-conversion** → **JSON** → **YAML** → **SVG/PNG images**
+            1. **VIAL files (.vil)** → **Auto-conversion** → **JSON** → **YAML** → **SVG/PDF/PNG images**
             2. Layer filtering applied (L0-L5 only, 60% size reduction)
-            3. Images are automatically committed when this PR is merged
+            3. Symbol translation (shows \`[\` instead of \`LBRACKET\`)
+            4. PDF generation for printing layouts
+            5. Images are automatically committed when this PR is merged
 
             ---
-            *Note: Fully automated via custom \`vil2json\` Rust tool + keymap-drawer*`;
+            *Note: Fully automated via custom \`vil2json\` Rust tool + keymap-drawer + librsvg*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,

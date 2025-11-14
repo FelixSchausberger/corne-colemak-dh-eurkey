@@ -1,0 +1,164 @@
+# Keymap Drawer Configuration
+# Maps QMK keycodes to readable symbols for visualization
+
+parse_config:
+  qmk_keyboard: crkbd/rev4_1/standard
+  qmk_layout: LAYOUT_split_3x6_3_ex2
+
+  # Map RAW QMK keycodes (from JSON) to symbols
+  # IMPORTANT: Use the exact format from the .vil/.json file (e.g., "LSFT(KC_1)" not "Sft+1")
+  raw_binding_map:
+    # Shifted number row (symbols) - RAW QMK format
+    "LSFT(KC_1)": "!"
+    "LSFT(KC_2)": "@"
+    "LSFT(KC_3)": "#"
+    "LSFT(KC_4)": "$"
+    "LSFT(KC_5)": "%"
+    "LSFT(KC_6)": "^"
+    "LSFT(KC_7)": "&"
+    "LSFT(KC_8)": "*"
+    "LSFT(KC_9)": "("
+    "LSFT(KC_0)": ")"
+
+    # Brackets and braces
+    "KC_LBRACKET": "["
+    "KC_RBRACKET": "]"
+    "LSFT(KC_LBRACKET)": "{"
+    "LSFT(KC_RBRACKET)": "}"
+
+    # Math and equals
+    "KC_EQUAL": "="
+    "LSFT(KC_EQUAL)": "+"
+    "KC_MINUS": "-"
+    "LSFT(KC_MINUS)": "_"
+
+    # Slashes and pipes
+    "KC_BSLASH": "\\"
+    "LSFT(KC_BSLASH)": "|"
+    "KC_SLASH": "/"
+    "LSFT(KC_SLASH)": "?"
+
+    # Quotes and backticks
+    "KC_GRAVE": "`"
+    "LSFT(KC_GRAVE)": "~"
+    "KC_GRAVE": "`"
+    "LSFT(KC_GRV)": "~"
+    "KC_QUOTE": "'"
+    "LSFT(KC_QUOTE)": '"'
+    "KC_QUOT": "'"
+    "LSFT(KC_QUOT)": '"'
+
+    # Semicolon and colon
+    "KC_SCOLON": ";"
+    "LSFT(KC_SCOLON)": ":"
+    "KC_COLON": ":" # Direct colon key
+
+    # Comma and period
+    "KC_COMMA": ","
+    "KC_DOT": "."
+    "LSFT(KC_COMMA)": "<"
+    "LSFT(KC_DOT)": ">"
+
+    # EurKey characters (RALT = AltGr)
+    "RALT(KC_A)": "ä"
+    "RALT(KC_O)": "ö"
+    "RALT(KC_U)": "ü"
+    "RALT(KC_S)": "ß"
+    "RALT(KC_0)": "°" # Degree symbol for EurKey
+    "RALT(KC_EQUAL)": "´" # Acute accent for EurKey
+
+    # GUI/Super key combinations - use standard Unicode instead of Nerd Fonts
+    # Nerd Font icons (󰎤) require special fonts and show as hex codes otherwise
+    "LGUI(KC_1)": "❶" # U+2776 - Circled digit: Switch to workspace 1
+    "LGUI(KC_2)": "❷" # U+2777 - Circled digit: Switch to workspace 2
+    "LGUI(KC_3)": "❸" # U+2778 - Circled digit: Switch to workspace 3
+    "LGUI(KC_4)": "❹" # U+2779 - Circled digit: Switch to workspace 4
+    "LGUI(KC_5)": "❺" # U+277A - Circled digit: Switch to workspace 5
+    "LGUI(KC_6)": "❻" # U+277B - Circled digit: Switch to workspace 6
+    "LGUI(KC_N)": "◀" # U+25C0 - Focus left window
+    "LGUI(KC_E)": "▼" # U+25BC - Focus down window
+    "LGUI(KC_I)": "▲" # U+25B2 - Focus up window
+    "LGUI(KC_O)": "▶" # U+25B6 - Focus right window
+    "LSFT(LGUI(KC_1))": "➊" # U+278A - Move window to workspace 1
+    "LSFT(LGUI(KC_2))": "➋" # U+278B - Move window to workspace 2
+    "LSFT(LGUI(KC_3))": "➌" # U+278C - Move window to workspace 3
+    "LSFT(LGUI(KC_4))": "➍" # U+278D - Move window to workspace 4
+    "LSFT(LGUI(KC_5))": "➎" # U+278E - Move window to workspace 5
+    "LSFT(LGUI(KC_6))": "➏" # U+278F - Move window to workspace 6
+    "LSFT(LGUI(KC_N))": "⬅" # U+2B05 - Move window left
+    "LSFT(LGUI(KC_E))": "⬇" # U+2B07 - Move window down
+    "LSFT(LGUI(KC_I))": "⬆" # U+2B06 - Move window up
+    "LSFT(LGUI(KC_O))": "➡" # U+27A1 - Move window right
+
+    # Special character glyphs using widely-supported Unicode
+    "KC_BSPC": "⌫" # U+232B - Backspace (QMK standard)
+    "KC_BSPACE": "⌫" # U+232B - Backspace (VIAL format)
+    "KC_SPC": "␣" # U+2423 - Space symbol (widely supported)
+    "KC_SPACE": "␣" # U+2423 - Space symbol alternate format
+    "KC_TAB": "↹" # U+21B9 - Standard tab symbol (better support than U+2B7E)
+    "KC_ENTER": "⏎" # U+23CE - Return symbol
+    "KC_SFTENT": "⇧⏎" # Shift+Enter (shifted return)
+
+    # Mod-Tap keys (Home Row Mods) - show both tap/hold functions
+    # Left hand home row mods
+    "MT(MOD_LGUI,KC_A)": "A\n⌘" # Tap: A, Hold: GUI/Super
+    "MT(MOD_LALT,KC_R)": "R\n⌥" # Tap: R, Hold: Alt
+    "MT(MOD_LCTL,KC_S)": "S\n⌃" # Tap: S, Hold: Control
+    "MT(MOD_LSFT,KC_T)": "T\n⇧" # Tap: T, Hold: Shift
+    # Right hand home row mods
+    "MT(MOD_RSFT,KC_N)": "N\n⇧" # Tap: N, Hold: Shift
+    "MT(MOD_RCTL,KC_E)": "E\n⌃" # Tap: E, Hold: Control
+    "MT(MOD_RALT,KC_I)": "I\n⌥" # Tap: I, Hold: Alt
+    "MT(MOD_RGUI,KC_O)": "O\n⌘" # Tap: O, Hold: GUI/Super
+
+    # Special dual-function keys
+    "KC_LSPO": "(\n⇧" # Tap: (, Hold: Left Shift
+    "KC_RCPC": ")\n⌃" # Tap: ), Hold: Right Control
+
+    # Tap-Dance keys - show both tap/hold functions
+    "TD(0)": "Esc\n⌃" # Tap: Escape, Hold: Control
+    "TD(1)": "Del\n⇧" # Tap: Delete, Hold: Shift
+    "TD(2)": "AREA" # Tap: Screenshot area (M1 macro)
+    "TD(3)": "SCRN\nPSCR" # Tap: Screenshot-full macro, Hold: Print Screen
+
+    # Macros - clear text labels (emoji render poorly in SVG)
+    "M0": "IDLE" # vigiland idle inhibitor toggle
+    "M1": "AREA" # screenshot-region (satty + slurp)
+    "M2": "FULL" # screenshot-full (satty fullscreen)
+
+    # Screenshot keys
+    "KC_PSCREEN": "PSCR" # Print Screen
+    "LSFT(KC_PSCREEN)": "⇧PSCR" # Shift+Print Screen
+
+    # RGB Lighting Controls
+    "RGB_TOG": "RGB" # RGB toggle on/off
+    "RGB_MOD": "MODE" # RGB mode/effect cycle
+    "RGB_HUI": "H+" # Hue increase
+    "RGB_HUD": "H-" # Hue decrease
+    "RGB_SAI": "S+" # Saturation increase
+    "RGB_SAD": "S-" # Saturation decrease
+    "RGB_VAI": "V+" # Value/brightness increase
+    "RGB_VAD": "V-" # Value/brightness decrease
+
+    # Navigation keys
+    "KC_HOME": "⇱" # Home (U+21F1)
+    "KC_END": "⇲" # End (U+21F2)
+    "KC_PGUP": "⇞" # Page Up (U+21DE)
+    "KC_PGDOWN": "⇟" # Page Down (U+21DF)
+
+    # System keys
+    "RESET": "⚠RST" # Keyboard reset/bootloader
+    "KC_ESCAPE": "Esc" # Escape
+    "KC_DELETE": "Del" # Delete
+    "KC_ESC": "Esc" # Escape alternate
+    "KC_DEL": "Del" # Delete alternate
+
+draw_config:
+  # Visual styling for layout diagrams
+  key_w: 52
+  key_h: 52
+  split_gap: 30
+  draw_key_sides: false
+
+  # Note: glyph_tap_map is not a valid keymap-drawer option.
+  # Use raw_binding_map in parse_config for symbol transformations instead.
