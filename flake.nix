@@ -148,16 +148,33 @@
 
             # Add scripts directory to PATH for easy command access
             export PATH="$(pwd)/scripts:$PATH"
+            export LOCAL_QMK_DIR="$(pwd)/vendor/vial-qmk"
+            export LOCAL_QMK_SOURCE_MARKER="$LOCAL_QMK_DIR/.source-path"
+            unalias build 2>/dev/null || true
+            alias build="$(pwd)/scripts/build"
 
-            # Simple build aliases (fish-compatible)
-            # Copy custom keymap to vial-qmk before building
+            _ensure_qmk_local() {
+              if [ ! -d "$LOCAL_QMK_DIR" ] || [ ! -f "$LOCAL_QMK_SOURCE_MARKER" ] || [ "$(cat "$LOCAL_QMK_SOURCE_MARKER" 2>/dev/null)" != "${vial-qmk}" ]; then
+                rm -rf "$LOCAL_QMK_DIR"
+                mkdir -p "$LOCAL_QMK_DIR"
+                cp -R ${vial-qmk}/. "$LOCAL_QMK_DIR"/
+                echo "${vial-qmk}" > "$LOCAL_QMK_SOURCE_MARKER"
+              fi
+              chmod -R u+w "$LOCAL_QMK_DIR"
+            }
+
+            # Simple build commands (fish-compatible)
+            # Copy custom keymap to vial-qmk before flashing
             _copy_keymap() {
-              mkdir -p "${vial-qmk}/keyboards/crkbd/keymaps"
-              cp -r keyboards/crkbd/keymaps/custom_hrmods "${vial-qmk}/keyboards/crkbd/keymaps/" 2>/dev/null || true
+              _ensure_qmk_local
+              local keyboard_root="$${KEYBOARD%%/*}"
+              local src="keyboards/$${keyboard_root}/keymaps/$${KEYMAP}"
+              local target="$LOCAL_QMK_DIR/keyboards/$${KEYBOARD}/keymaps"
+              mkdir -p "$target"
+              cp -r "$src" "$target/" 2>/dev/null || true
               echo "✓ Custom keymap copied to QMK source"
             }
-            alias build='_copy_keymap && make -C ${vial-qmk} BUILD_DIR=$(pwd)/build COPY=echo -j$(nproc) $KEYBOARD:$KEYMAP'
-            alias flash='_copy_keymap && make -C ${vial-qmk} BUILD_DIR=$(pwd)/build COPY=echo -j$(nproc) $KEYBOARD:$KEYMAP:flash'
+            alias flash='_copy_keymap && make -C $LOCAL_QMK_DIR BUILD_DIR=$(pwd)/build COPY=echo -j$(nproc) $KEYBOARD:$KEYMAP:flash'
             alias clean='rm -rf build/ && echo "Build directory cleaned"'
             alias copy-uf2='cp build/*.uf2 firmware/ 2>/dev/null && echo "UF2 copied to firmware/" || echo "No UF2 files found"'
 

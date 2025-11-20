@@ -35,7 +35,9 @@
 
 // Per-key tapping term allows fine-tuning for specific keys
 // We'll use this to give home row mods slightly longer time
-#define TAPPING_TERM_PER_KEY
+#ifndef TAPPING_TERM_PER_KEY
+#    define TAPPING_TERM_PER_KEY
+#endif
 
 // Prevent accidental same-hand mod combinations (e.g., S+T = Ctrl+Shift)
 // This requires defining the logic in keymap.c
@@ -100,8 +102,9 @@
 // Combo Configuration
 // ============================================================================
 
-#define COMBO_COUNT 8  // Number of combos defined
-#define COMBO_TERM 50  // Time window for combo activation (ms)
+// Combos disabled for now - no combos defined in keymap
+// #define VIAL_COMBO_ENTRIES 8  // Number of combos defined (VIAL uses VIAL_COMBO_ENTRIES instead of COMBO_COUNT)
+// #define COMBO_TERM 50  // Time window for combo activation (ms)
 
 // ============================================================================
 // Firmware Size Optimization
@@ -122,7 +125,13 @@
 
 // Serial communication for split halves
 #define SERIAL_USART_FULL_DUPLEX
+#ifdef SERIAL_USART_TX_PIN
+#    undef SERIAL_USART_TX_PIN
+#endif
 #define SERIAL_USART_TX_PIN GP0
+#ifdef SERIAL_USART_RX_PIN
+#    undef SERIAL_USART_RX_PIN
+#endif
 #define SERIAL_USART_RX_PIN GP1
 #define SPLIT_POINTING_ENABLE
 #define ROTARY_ENCODER_RESOLUTION 4

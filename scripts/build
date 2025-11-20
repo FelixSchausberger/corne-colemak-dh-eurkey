@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(dirname -- "$script_dir")"
+
+: "${QMK_HOME:?QMK_HOME is not set. Please run 'nix develop' first.}"
+
+keyboard="${KEYBOARD:-crkbd/rev4_1/standard}"
+keymap="${KEYMAP:-custom_hrmods}"
+keyboard_root="${keyboard%%/*}"
+keymap_src="${repo_root}/keyboards/${keyboard_root}/keymaps/${keymap}"
+build_dir="${repo_root}/build"
+local_qmk="${LOCAL_QMK_DIR:-${repo_root}/vendor/vial-qmk}"
+source_marker="${LOCAL_QMK_SOURCE_MARKER:-${local_qmk}/.source-path}"
+target_dir="${local_qmk}/keyboards/${keyboard}/keymaps"
+
+if [ ! -d "$keymap_src" ]; then
+  echo "Keymap directory '$keymap_src' not found."
+  exit 1
+fi
+
+if [ ! -d "$local_qmk" ] || [ ! -f "$source_marker" ] || [ "$(cat "$source_marker" 2>/dev/null)" != "$QMK_HOME" ]; then
+  echo "Syncing QMK source to $local_qmk"
+  rm -rf "$local_qmk"
+  mkdir -p "$local_qmk"
+  cp -R "$QMK_HOME"/. "$local_qmk/"
+  echo "$QMK_HOME" > "$source_marker"
+fi
+chmod -R u+w "$local_qmk"
+
+mkdir -p "$target_dir"
+cp -r "$keymap_src" "$target_dir/" 2>/dev/null || true
+echo "✓ Custom keymap copied to local QMK source"
+
+make -C "$local_qmk" BUILD_DIR="$build_dir" COPY=echo -j"$(nproc)" "$keyboard:$keymap"

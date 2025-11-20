@@ -48,3 +48,10 @@ __pycache__/
 
 # Keyboard layout tool exports (if applicable)
 *.kle.json
+
+# Local copy of vial-qmk source
+vendor/
+
+# Nix build output and QMK build artifacts
+result*
+build/

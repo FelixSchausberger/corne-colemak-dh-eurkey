@@ -61,10 +61,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      *                                 └─────┴─────┘ └─────┴─────┘
      */
     [_BASE] = LAYOUT_split_3x6_3_ex2(
-        KC_TAB,  KC_Q,            KC_W,            KC_F,            KC_P,            KC_B,     KC_GESC, TD(TD_ESC_GUI), KC_J,    KC_L,            KC_U,            KC_Y,            KC_SCLN,         KC_BSPC,
-        KC_LSPO, MT(MOD_LGUI,KC_A), MT(MOD_LALT,KC_R), MT(MOD_LCTL,KC_S), MT(MOD_LSFT,KC_T), KC_G,     KC_RCPC, KC_RALT,        KC_M,    MT(MOD_RSFT,KC_N), MT(MOD_RCTL,KC_E), MT(MOD_RALT,KC_I), MT(MOD_RGUI,KC_O), TD(TD_DEL_SHFT),
+        KC_TAB,  KC_Q,            KC_W,            KC_F,            KC_P,            KC_B,     QK_GESC, TD(TD_ESC_GUI), KC_J,    KC_L,            KC_U,            KC_Y,            KC_SCLN,         KC_BSPC,
+        SC_LSPO, MT(MOD_LGUI,KC_A), MT(MOD_LALT,KC_R), MT(MOD_LCTL,KC_S), MT(MOD_LSFT,KC_T), KC_G,     SC_RCPC, KC_RALT,        KC_M,    MT(MOD_RSFT,KC_N), MT(MOD_RCTL,KC_E), MT(MOD_RALT,KC_I), MT(MOD_RGUI,KC_O), TD(TD_DEL_SHFT),
         KC_LGUI, KC_Z,            KC_X,            KC_C,            KC_D,            KC_V,     KC_K,    KC_H,           KC_COMM, KC_DOT,          KC_SLSH,         KC_QUOT,
-                                                   KC_LCTL,         MO(_NUM),        KC_SPC,   KC_SFTENT, MO(_SYM),     KC_RCTL
+                                                   KC_LCTL,         MO(_NUM),        KC_SPC,   SC_SENT, MO(_SYM),     KC_RCTL
     ),
 
     /* Layer 1: Numbers & Navigation
@@ -88,7 +88,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TRNS, KC_1,    KC_2,    KC_3,    KC_4,    KC_5,     KC_TRNS, KC_TRNS, KC_6,    KC_7,    KC_8,    KC_9,    KC_0,     KC_BSPC,
         KC_TRNS, KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,    KC_TRNS, KC_TRNS, KC_NO,   KC_LEFT, KC_DOWN, KC_UP,   KC_RIGHT, KC_NO,
         KC_TRNS, KC_NO,   KC_NO,   TG(_FN), KC_NO,   KC_NO,    KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,
-                                    KC_LGUI, KC_TRNS, KC_SPC,   KC_SFTENT, KC_TRNS, KC_RGUI
+                                    KC_LGUI, KC_TRNS, KC_SPC,   SC_SENT, KC_TRNS, KC_RGUI
     ),
 
     /* Layer 2: Symbols & Programming
@@ -109,7 +109,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TAB,  LSFT(KC_1), LSFT(KC_2), LSFT(KC_3), LSFT(KC_4), LSFT(KC_5),  KC_LCTL,   KC_RCTL,      LSFT(KC_8), LSFT(KC_QUOT), RALT(KC_U), LSFT(KC_7), LSFT(KC_6), KC_BSPC,
         KC_LCTL, RALT(KC_A), RALT(KC_0), RALT(KC_S), KC_NO,      KC_NO,       KC_LALT,   KC_RALT,      KC_MINS,    KC_EQL,        KC_RBRC,    KC_LBRC,    RALT(KC_O), KC_GRV,
         KC_LSFT, LSFT(KC_BSLS), LSFT(KC_SLSH), KC_NO, KC_NO,   KC_NO,       LSFT(KC_MINS), LSFT(KC_EQL), LSFT(KC_RBRC), LSFT(KC_LBRC), KC_BSLS, LSFT(KC_GRV),
-                                              KC_LGUI, KC_TRNS, KC_SPC,      KC_SFTENT, KC_TRNS,      KC_RGUI
+                                              KC_LGUI, KC_TRNS, KC_SPC,      SC_SENT, KC_TRNS,      KC_RGUI
     ),
 
     /* Layer 3: Function & System
@@ -130,7 +130,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         QK_BOOT, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,    KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  TD(TD_MACRO_PSCR),
         RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI, M_IDLE,  KC_NO,    KC_NO,   KC_BRID, KC_BRIU, KC_MUTE, KC_VOLD, KC_VOLU, KC_PGUP, KC_HOME,
         RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, M_FULL,  KC_PSCR,  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_PGDN, KC_END,
-                                    KC_LGUI, KC_TRNS, KC_SPC,   KC_SFTENT, KC_TRNS, KC_RGUI
+                                    KC_LGUI, KC_TRNS, KC_SPC,   SC_SENT, KC_TRNS, KC_RGUI
     )
 };
 
