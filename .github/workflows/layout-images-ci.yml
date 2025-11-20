@@ -41,11 +41,25 @@ jobs:
           echo "=== Auto-converting VIAL layouts ==="
 
           nix develop --command bash <<'SCRIPT'
+            set -e  # Exit immediately if a command fails
             echo '🔄 Converting .vil → .json → .yaml...'
+
+            # Track conversion status
+            success_count=0
+            failure_count=0
+            failed_files=""
 
             for vil_file in firmware/*.vil; do
               if [ -f "$vil_file" ]; then
                 base_name=$(basename "$vil_file" .vil)
+
+                # Skip corne_nwwy.vil (historical reference file with invalid layer references)
+                # Images are maintained in images/nwwy/ directory
+                if [ "$base_name" = "corne_nwwy" ]; then
+                  echo "  ⏭️  Skipping: $vil_file (historical reference file)"
+                  continue
+                fi
+
                 json_file="firmware/${base_name}.json"
                 yaml_file="firmware/${base_name}.yaml"
 
@@ -56,16 +70,35 @@ jobs:
                   echo "  📝 Generating: $yaml_file"
                   if keymap -c keymap-drawer.yaml parse -q "$json_file" -o "$yaml_file"; then
                     echo "  ✅ Success: $base_name"
+                    success_count=$((success_count + 1))
                   else
-                    echo "  ⚠️ Warning: Failed to parse $json_file to YAML"
+                    echo "  ❌ ERROR: Failed to parse $json_file to YAML"
+                    failure_count=$((failure_count + 1))
+                    failed_files="$failed_files\n  - $base_name (YAML parse failed)"
                   fi
                 else
-                  echo "  ⚠️ Warning: Failed to convert $vil_file to JSON"
+                  echo "  ❌ ERROR: Failed to convert $vil_file to JSON"
+                  failure_count=$((failure_count + 1))
+                  failed_files="$failed_files\n  - $base_name (JSON conversion failed)"
                 fi
               fi
             done
 
-            echo '✅ Conversion complete'
+            echo ""
+            echo "=== Conversion Summary ==="
+            echo "✅ Successful: $success_count"
+            echo "❌ Failed: $failure_count"
+
+            if [ $failure_count -gt 0 ]; then
+              echo ""
+              echo "Failed files:"
+              echo -e "$failed_files"
+              echo ""
+              echo "ERROR: Some conversions failed. Halting workflow."
+              exit 1
+            fi
+
+            echo '✅ All conversions completed successfully'
           SCRIPT
       - name: Generate layout images from YAML files
         run: |
@@ -76,11 +109,24 @@ jobs:
 
           # Enter nix development environment and generate images
           nix develop --command bash <<'SCRIPT'
+            set -e  # Exit immediately if a command fails
             echo '🎨 Generating images from YAML files...'
+
+            # Track generation status
+            success_count=0
+            failure_count=0
+            failed_files=""
 
             for yaml_file in firmware/*.yaml; do
               if [ -f "$yaml_file" ]; then
                 base_name=$(basename "$yaml_file" .yaml)
+
+                # Skip corne_nwwy.yaml (historical reference, images in images/nwwy/)
+                if [ "$base_name" = "corne_nwwy" ]; then
+                  echo "⏭️  Skipping: $yaml_file (historical reference file)"
+                  continue
+                fi
+
                 output_svg="images/generated/${base_name}.svg"
                 output_pdf="images/generated/${base_name}.pdf"
                 output_png="images/generated/${base_name}.png"
@@ -90,13 +136,26 @@ jobs:
                 # Use custom config to display actual symbols instead of keycodes
                 # NOTE: -c must come BEFORE the draw subcommand
                 if keymap -c keymap-drawer.yaml draw "$yaml_file" -o "$output_svg"; then
-                  echo "  ✅ SVG generated successfully"
+                  # Validate SVG file size (detect 0-byte files)
+                  svg_size=$(stat -c%s "$output_svg" 2>/dev/null || stat -f%z "$output_svg" 2>/dev/null)
+                  if [ "$svg_size" -eq 0 ]; then
+                    echo "  ❌ ERROR: Generated SVG is empty (0 bytes)"
+                    ((failure_count++))
+                    failed_files="$failed_files\n  - $base_name (0-byte SVG)"
+                    continue
+                  fi
+
+                  echo "  ✅ SVG generated successfully (${svg_size} bytes)"
 
                   # Convert SVG to PDF for printing
                   if command -v rsvg-convert >/dev/null 2>&1; then
                     echo "  📄 Converting to PDF: $output_pdf"
-                    rsvg-convert -f pdf -o "$output_pdf" "$output_svg"
-                    echo "  ✅ PDF generated successfully"
+                    if rsvg-convert -f pdf -o "$output_pdf" "$output_svg"; then
+                      pdf_size=$(stat -c%s "$output_pdf" 2>/dev/null || stat -f%z "$output_pdf" 2>/dev/null)
+                      echo "  ✅ PDF generated successfully (${pdf_size} bytes)"
+                    else
+                      echo "  ⚠️ Warning: PDF conversion failed, continuing..."
+                    fi
                   else
                     echo "  ℹ️ rsvg-convert not available, skipping PDF conversion"
                   fi
@@ -104,19 +163,44 @@ jobs:
                   # Convert SVG to PNG using ImageMagick (if available)
                   if command -v convert >/dev/null 2>&1; then
                     echo "  🖼️ Converting to PNG: $output_png"
-                    convert "$output_svg" "$output_png"
-                    echo "  ✅ PNG generated successfully"
+                    if convert "$output_svg" "$output_png"; then
+                      png_size=$(stat -c%s "$output_png" 2>/dev/null || stat -f%z "$output_png" 2>/dev/null)
+                      echo "  ✅ PNG generated successfully (${png_size} bytes)"
+                    else
+                      echo "  ⚠️ Warning: PNG conversion failed, continuing..."
+                    fi
                   else
                     echo "  ℹ️ ImageMagick not available, skipping PNG conversion"
                   fi
+
+                  success_count=$((success_count + 1))
                 else
-                  echo "  ⚠️ Warning: Failed to generate image for $yaml_file"
+                  echo "  ❌ ERROR: Failed to generate image for $yaml_file"
+                  failure_count=$((failure_count + 1))
+                  failed_files="$failed_files\n  - $base_name (keymap draw failed)"
                 fi
               fi
             done
 
-            echo '✅ Image generation complete'
+            echo ""
+            echo "=== Image Generation Summary ==="
+            echo "✅ Successful: $success_count"
+            echo "❌ Failed: $failure_count"
+            echo ""
+            echo "Generated files:"
             ls -lh images/generated/ || echo 'No images generated'
+
+            if [ $failure_count -gt 0 ]; then
+              echo ""
+              echo "Failed files:"
+              echo -e "$failed_files"
+              echo ""
+              echo "ERROR: Some image generations failed. Halting workflow."
+              exit 1
+            fi
+
+            echo ""
+            echo '✅ All images generated successfully'
           SCRIPT
       - name: Commit generated images
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
