@@ -77,15 +77,17 @@
       "flake": false,
       "locked": {
         "lastModified": 1763323611,
-        "narHash": "sha256-GIagb29aLKQlbhUL9peVK5evInWpPHmAw5O/zFUPbkI=",
+        "narHash": "sha256-qFtGWSe27YOnIxcuT1ALscD3UJKGWxyCptde49uWAxw=",
         "ref": "vial",
         "rev": "9bc7aefa6beab93f3fe1ceecd120376097186e0a",
         "revCount": 29777,
+        "submodules": true,
         "type": "git",
         "url": "https://github.com/vial-kb/vial-qmk"
       },
       "original": {
         "ref": "vial",
+        "submodules": true,
         "type": "git",
         "url": "https://github.com/vial-kb/vial-qmk"
       }
