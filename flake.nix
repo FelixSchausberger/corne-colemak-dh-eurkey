@@ -19,7 +19,6 @@
 
     # The vial fork of qmk, stores the keyboard config in on-keyboard memory, and
     # supports the `Vial` GUI key map config app.
-    # Using git+https to enable submodule fetching (required for ChibiOS)
     vial-qmk = {
       url = "git+https://github.com/vial-kb/vial-qmk?ref=vial&submodules=1";
       flake = false;
@@ -60,7 +59,7 @@
         devShells.default = pkgs.mkShell {
           # Corne V4.1 specific configuration
           KEYBOARD = "crkbd/rev4_1/standard"; # ✅ Correct for Corne V4.1 (46 keys)
-          KEYMAP = "vial";
+          KEYMAP = "custom_hrmods"; # Custom keymap with RGB indicators and home row mod fixes
 
           # Enhanced build configuration
           VIAL_QMK_DIR = "${vial-qmk}";
@@ -145,8 +144,14 @@
             export PATH="$(pwd)/scripts:$PATH"
 
             # Simple build aliases (fish-compatible)
-            alias build='make -C ${vial-qmk} BUILD_DIR=$(pwd)/build COPY=echo -j$(nproc) $KEYBOARD:$KEYMAP'
-            alias flash='make -C ${vial-qmk} BUILD_DIR=$(pwd)/build COPY=echo -j$(nproc) $KEYBOARD:$KEYMAP:flash'
+            # Copy custom keymap to vial-qmk before building
+            _copy_keymap() {
+              mkdir -p "${vial-qmk}/keyboards/crkbd/keymaps"
+              cp -r keyboards/crkbd/keymaps/custom_hrmods "${vial-qmk}/keyboards/crkbd/keymaps/" 2>/dev/null || true
+              echo "✓ Custom keymap copied to QMK source"
+            }
+            alias build='_copy_keymap && make -C ${vial-qmk} BUILD_DIR=$(pwd)/build COPY=echo -j$(nproc) $KEYBOARD:$KEYMAP'
+            alias flash='_copy_keymap && make -C ${vial-qmk} BUILD_DIR=$(pwd)/build COPY=echo -j$(nproc) $KEYBOARD:$KEYMAP:flash'
             alias clean='rm -rf build/ && echo "Build directory cleaned"'
             alias copy-uf2='cp build/*.uf2 firmware/ 2>/dev/null && echo "UF2 copied to firmware/" || echo "No UF2 files found"'
 

@@ -109,13 +109,48 @@ jobs:
             fi
 
             echo ''
+            echo '=== Copying Custom Keymap ==='
+
+            # Copy custom keymap to VIAL_QMK_DIR (need writable location)
+            # Must use full copy (not symlinks) for QMK converter system
+            TEMP_QMK=\$(mktemp -d)
+            echo 'Creating writable QMK copy (this may take a moment)...'
+            cp -r \$VIAL_QMK_DIR/* \$TEMP_QMK/
+            chmod -R u+w \$TEMP_QMK
+
+            # Initialize git repository and submodules in temp directory
+            # (needed since flake now fetches vial-qmk without submodules for deterministic builds)
+            cd \$TEMP_QMK
+            if [ -f .gitmodules ]; then
+              echo 'Initializing QMK submodules...'
+              git init
+              git config user.email 'ci@github.com'
+              git config user.name 'GitHub CI'
+              git add .
+              git commit -m 'temp' --no-verify
+              git submodule update --init --recursive
+              echo '✓ Submodules initialized'
+            fi
+            cd -
+
+            # Copy custom keymap
+            mkdir -p \$TEMP_QMK/keyboards/crkbd/keymaps/custom_hrmods
+            cp -r keyboards/crkbd/keymaps/custom_hrmods/* \$TEMP_QMK/keyboards/crkbd/keymaps/custom_hrmods/
+            echo '✓ Custom keymap copied to build environment'
+
+            echo ''
             echo '=== Starting Firmware Build ==='
 
-            # Build firmware
-            make -C \$VIAL_QMK_DIR BUILD_DIR=\$(pwd)/build COPY=echo -j\$(nproc) \$KEYBOARD:\$KEYMAP
+            # Build firmware from writable temp directory
+            BUILD_ABS_PATH=\$(pwd)/build
+            cd \$TEMP_QMK
+            make BUILD_DIR=\$BUILD_ABS_PATH COPY=echo -j\$(nproc) \$KEYBOARD:\$KEYMAP
 
             echo ''
             echo '=== Build Complete ==='
+
+            # Go back to repo root
+            cd -
             ls -la build/ || echo 'No build directory found'
 
             # Copy firmware files
