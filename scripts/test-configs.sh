@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Nix configuration validation
 # Tests flake configuration and syntax
 

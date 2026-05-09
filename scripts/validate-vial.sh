@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Simple VIAL layout validation
 # Basic JSON validation for .vil files
 

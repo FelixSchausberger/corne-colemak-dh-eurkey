@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Color utility functions for terminal output
 # Provides professional status indicators with ANSI colors
 

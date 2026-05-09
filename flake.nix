@@ -20,24 +20,26 @@
     # The vial fork of qmk, stores the keyboard config in on-keyboard memory, and
     # supports the `Vial` GUI key map config app.
     vial-qmk = {
-      url = "git+https://github.com/vial-kb/vial-qmk?ref=vial&submodules=1";
+      url = "https://github.com/vial-kb/vial-qmk/archive/vial.tar.gz";
       flake = false;
     };
 
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {
-    nixpkgs,
-    nixos-unstable,
-    vial-qmk,
-    flake-utils,
-    ...
-  }:
-  # This effectively appends `.x86_64-linux` to the attributes returned
-  # by the function passed in. The `system` parameter is also that string.
-    flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-linux"] (
-      system: let
+  outputs =
+    {
+      nixpkgs,
+      nixos-unstable,
+      vial-qmk,
+      flake-utils,
+      ...
+    }:
+    # This effectively appends `.x86_64-linux` to the attributes returned
+    # by the function passed in. The `system` parameter is also that string.
+    flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
+      system:
+      let
         pkgs = import nixpkgs {
           inherit system;
           overlays = [
@@ -54,7 +56,8 @@
           ];
         };
         lib = pkgs.lib;
-      in {
+      in
+      {
         # Development shell for building firmware
         devShells.default = pkgs.mkShell {
           # Corne V4.1 specific configuration
@@ -71,60 +74,63 @@
 
           # Build inputs with additional tools
           # Split into CI-required (always) and dev-only (local development)
-          buildInputs = with pkgs; [
-            # Core firmware build tools (needed in CI)
-            cacert # SSL certificates for git operations
-            qmk
-            unstable.vial
-            dfu-util # For flashing via DFU
-            avrdude # For AVR microcontrollers
-            gcc-arm-embedded # For ARM microcontrollers
-            python3 # QMK requirements
-            python3Packages.setuptools
+          buildInputs =
+            with pkgs;
+            [
+              # Core firmware build tools (needed in CI)
+              cacert # SSL certificates for git operations
+              qmk
+              unstable.vial
+              dfu-util # For flashing via DFU
+              avrdude # For AVR microcontrollers
+              gcc-arm-embedded # For ARM microcontrollers
+              python3 # QMK requirements
+              python3Packages.setuptools
 
-            # QMK Python dependencies
-            unstable.python3Packages.milc # Need >= 1.9.0 for via2json
-            python3Packages.dotty-dict
-            python3Packages.hid
-            python3Packages.hjson
-            python3Packages.jsonschema
-            python3Packages.pyusb
-            python3Packages.argcomplete
-            python3Packages.platformdirs # MILC dependency
-            python3Packages.appdirs # Legacy MILC dependency
-            python3Packages.pyyaml # YAML parsing for pre-commit hooks
-            git # For QMK setup
-            which # Build dependency
-            gnumake # Build system
+              # QMK Python dependencies
+              unstable.python3Packages.milc # Need >= 1.9.0 for via2json
+              python3Packages.dotty-dict
+              python3Packages.hid
+              python3Packages.hjson
+              python3Packages.jsonschema
+              python3Packages.pyusb
+              python3Packages.argcomplete
+              python3Packages.platformdirs # MILC dependency
+              python3Packages.appdirs # Legacy MILC dependency
+              python3Packages.pyyaml # YAML parsing for pre-commit hooks
+              git # For QMK setup
+              which # Build dependency
+              gnumake # Build system
 
-            # Additional utilities (needed in CI for layout generation)
-            jq # JSON processing for layout files
-            unstable.keymap-drawer # Layout visualization tool
-            librsvg # SVG to PDF conversion (rsvg-convert command)
+              # Additional utilities (needed in CI for layout generation)
+              jq # JSON processing for layout files
+              unstable.keymap-drawer # Layout visualization tool
+              librsvg # SVG to PDF conversion (rsvg-convert command)
 
-            # Rust tool: VIAL to QMK JSON converter (needed in CI)
-            (pkgs.rustPlatform.buildRustPackage {
-              pname = "vil2json";
-              version = "0.1.0";
-              src = ./tools/vil2json;
-              cargoLock.lockFile = ./tools/vil2json/Cargo.lock;
-            })
-          ] ++ lib.optionals (builtins.getEnv "CI" != "true") [
-            # Development-only tools (NOT in CI - saves ~5-8GB disk space)
-            # GitHub Actions CI uses j178/prek-action instead of nix prek
-            unstable.prek # Pre-commit hook manager (meta-tool, Rust-based, heavy build)
-            alejandra # Nix formatter (prek)
-            deadnix # Remove unused Nix code (prek)
-            statix # Nix linter (prek)
-            unstable.flake-checker # Flake validation (prek)
-            yamlfmt # YAML formatter (prek)
-            taplo # TOML formatter (prek)
-            nodePackages.prettier # JSON/YAML/Markdown formatter (prek)
-            ripsecrets # Secret detection (prek)
-            act # Local GitHub Actions runner
-            nodePackages.markdownlint-cli # Markdown linting
-            yamllint # YAML validation
-          ];
+              # Rust tool: VIAL to QMK JSON converter (needed in CI)
+              (pkgs.rustPlatform.buildRustPackage {
+                pname = "vil2json";
+                version = "0.1.0";
+                src = ./tools/vil2json;
+                cargoLock.lockFile = ./tools/vil2json/Cargo.lock;
+              })
+            ]
+            ++ lib.optionals (builtins.getEnv "CI" != "true") [
+              # Development-only tools (NOT in CI - saves ~5-8GB disk space)
+              # GitHub Actions CI uses j178/prek-action instead of nix prek
+              unstable.prek # Pre-commit hook manager (meta-tool, Rust-based, heavy build)
+              alejandra # Nix formatter (prek)
+              deadnix # Remove unused Nix code (prek)
+              statix # Nix linter (prek)
+              unstable.flake-checker # Flake validation (prek)
+              yamlfmt # YAML formatter (prek)
+              taplo # TOML formatter (prek)
+              nodePackages.prettier # JSON/YAML/Markdown formatter (prek)
+              ripsecrets # Secret detection (prek)
+              act # Local GitHub Actions runner
+              nodePackages.markdownlint-cli # Markdown linting
+              yamllint # YAML validation
+            ];
 
           # Alias commands for building and flashing
           shellHook = ''

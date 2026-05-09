@@ -64,8 +64,8 @@ parse_config:
     "RALT(KC_O)": "ö"
     "RALT(KC_U)": "ü"
     "RALT(KC_S)": "ß"
-    "RALT(KC_0)": "°" # Degree symbol for EurKey
-    "RALT(KC_EQUAL)": "´" # Acute accent for EurKey
+    "RALT(KC_5)": "€" # Euro sign for EurKey
+    "RALT(KC_SCOLON)": "°" # Degree symbol for EurKey
 
     # GUI/Super key combinations - use standard Unicode instead of Nerd Fonts
     # Nerd Font icons (󰎤) require special fonts and show as hex codes otherwise

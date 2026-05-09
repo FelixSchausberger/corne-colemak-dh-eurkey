@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # VIAL layout validation script
 # Tests all .vil files in firmware directory
 

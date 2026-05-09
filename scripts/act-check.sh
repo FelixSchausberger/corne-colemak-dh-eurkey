@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # GitHub Actions local testing with act
 # Simplified wrapper with WSL2/NixOS certificate handling
 
